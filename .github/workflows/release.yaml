@@ -25,3 +25,4 @@ jobs:
           binary_name: "ttv-live"
           extra_files: LICENSE README.md
           md5sum: FALSE
+          overwrite: TRUE
