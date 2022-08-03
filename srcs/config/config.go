@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -23,11 +22,16 @@ func createDefaultConfig(filename string) Config {
 
 	contents, err := json.MarshalIndent(emptyConfig, "", "  ")
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
+	}
+
+	err = os.MkdirAll(path.Base(filename), 0755)
+	if err != nil && !os.IsExist(err) {
+		log.Fatal(err)
 	}
 
 	if err := ioutil.WriteFile(filename, contents, 0644); err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 
 	return emptyConfig
@@ -36,7 +40,7 @@ func createDefaultConfig(filename string) Config {
 func CreateOrReadFromFile(filename string) Config {
 	contents, err := ioutil.ReadFile(filename)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
+		if os.IsNotExist(err) {
 			return createDefaultConfig(filename)
 		}
 		panic(err)
