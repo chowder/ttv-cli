@@ -1,8 +1,6 @@
 # `ttv-tools`
 
-A collection of programs to help the average chatter use Twitch from the command line 
-
-___
+A collection of programs to help the average chatter use Twitch from the command line
 
 ## `ttv-live`
 
@@ -25,8 +23,6 @@ Populate your `~/.config/ttv-live/ttv-live.config` file with the list of streame
   ]
 }
 ```
-
-___
 
 ## `ttv-points`
 
