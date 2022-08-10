@@ -1,4 +1,4 @@
-package twitch
+package gql
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-const QUERY = `query Channel($logins: [String!]) {
+const getUsersQuery = `query Users($logins: [String!]) {
     users(logins: $logins) {
         displayName
         profileURL
@@ -23,17 +23,13 @@ const QUERY = `query Channel($logins: [String!]) {
     }
 }`
 
-const GqlApiUri = "https://gql.twitch.tv/gql"
-
-const DefaultClientId = "kimne78kx3ncx6brgo4mv6wki5h1ko"
-
-type Variables struct {
+type variables struct {
 	Logins []string `json:"logins"`
 }
 
-type Request struct {
+type request struct {
 	Query     string    `json:"query"`
-	Variables Variables `json:"variables"`
+	Variables variables `json:"variables"`
 }
 
 type User struct {
@@ -54,16 +50,16 @@ type Response struct {
 	} `json:"data"`
 }
 
-func makeRequest(logins []string) Request {
-	return Request{
-		Query: QUERY,
-		Variables: Variables{
+func makeRequest(logins []string) request {
+	return request{
+		Query: getUsersQuery,
+		Variables: variables{
 			Logins: logins,
 		},
 	}
 }
 
-func GetAllStreamers(logins []string) []User {
+func GetUsers(logins []string) []User {
 	// Create POST request body
 	request := makeRequest(logins)
 
@@ -73,11 +69,11 @@ func GetAllStreamers(logins []string) []User {
 	}
 
 	// Make a POST request
-	req, err := http.NewRequest("POST", GqlApiUri, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", gqlApiUrl, bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Fatalln(err)
 	}
-	req.Header.Add("Client-ID", DefaultClientId)
+	req.Header.Add("Client-ID", defaultClientId)
 
 	// Execute the POST request
 	client := &http.Client{}

@@ -5,7 +5,7 @@ import (
 	"github.com/fatih/color"
 	"log"
 	"time"
-	"ttv-live/internals/pkg/twitch"
+	"ttv-tools/internals/pkg/twitch/gql"
 )
 
 func FmtDuration(d time.Duration) string {
@@ -21,7 +21,7 @@ func FmtDuration(d time.Duration) string {
 	return fmt.Sprintf("%1dh%02dm", h, m)
 }
 
-func DisplayUserLive(user twitch.User) {
+func DisplayUserLive(user gql.User) {
 	green := color.New(color.FgHiGreen).SprintFunc()
 	yellow := color.New(color.FgHiYellow).SprintFunc()
 
@@ -39,7 +39,7 @@ func DisplayUserLive(user twitch.User) {
 	fmt.Println("  \u2022", green(streamer), ":", green(directory), yellow("(", FmtDuration(duration), ")"))
 }
 
-func DisplayUserOffline(user twitch.User) {
+func DisplayUserOffline(user gql.User) {
 	red := color.New(color.FgHiRed).SprintFunc()
 	streamer := fmt.Sprintf("%-10s", user.DisplayName)
 

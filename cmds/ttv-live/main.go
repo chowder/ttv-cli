@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
-	"ttv-live/internals/app/ttv-live/config"
-	"ttv-live/internals/pkg/twitch"
-	"ttv-live/internals/pkg/utils"
+	"ttv-tools/internals/app/ttv-live/config"
+	"ttv-tools/internals/pkg/twitch/gql"
+	"ttv-tools/internals/pkg/utils"
 )
 
 func main() {
@@ -14,11 +14,11 @@ func main() {
 	}
 
 	// Get all streamers from Twitch API
-	streamers := twitch.GetAllStreamers(c.Streamers)
+	streamers := gql.GetUsers(c.Streamers)
 
 	// Filter between live and offline streamers
-	online := make([]twitch.User, 0)
-	offline := make([]twitch.User, 0)
+	online := make([]gql.User, 0)
+	offline := make([]gql.User, 0)
 
 	for _, user := range streamers {
 		if user.Stream.CreatedAt != "" {
