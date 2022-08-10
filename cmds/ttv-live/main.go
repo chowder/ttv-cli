@@ -2,12 +2,9 @@ package main
 
 import (
 	"log"
-)
-
-import (
-	"ttv-live/srcs/config"
-	"ttv-live/srcs/twitch"
-	"ttv-live/srcs/utils"
+	"ttv-live/internals/app/ttv-live/config"
+	"ttv-live/internals/pkg/twitch"
+	"ttv-live/internals/pkg/utils"
 )
 
 func main() {

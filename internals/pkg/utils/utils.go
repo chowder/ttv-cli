@@ -5,10 +5,7 @@ import (
 	"github.com/fatih/color"
 	"log"
 	"time"
-)
-
-import (
-	"ttv-live/srcs/twitch"
+	"ttv-live/internals/pkg/twitch"
 )
 
 func FmtDuration(d time.Duration) string {
@@ -18,7 +15,7 @@ func FmtDuration(d time.Duration) string {
 	m := d / time.Minute
 
 	if h == 0 {
-		return fmt.Sprintf("%02dm", m)
+		return fmt.Sprintf("%dm", m)
 	}
 
 	return fmt.Sprintf("%1dh%02dm", h, m)
