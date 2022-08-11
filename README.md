@@ -1,4 +1,4 @@
-# `ttv-tools`
+# `ttv-cli`
 
 A collection of programs to help the average chatter use Twitch from the command line
 
