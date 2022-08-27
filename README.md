@@ -10,7 +10,7 @@ Checks whether your favourite Twitch streamers are currently live.
 
 ### Configuration
 
-Populate your `~/.config/ttv-live/ttv-live.config` file with the list of streamers to track.
+Populate your `~/.config/ttv-cli/ttv-cli.config` file with the list of streamers to track.
 
 ```json
 {
@@ -26,6 +26,8 @@ Populate your `~/.config/ttv-live/ttv-live.config` file with the list of streame
 
 ## `ttv-points`
 
-View all channel points rewards from the command line, with additional countdowns for cooldown-enabled rewards - common for games with Twitch integration. 
+View and redeem Twitch channel point rewards from the command line. 
 
 [ttv-rewards.webm](https://user-images.githubusercontent.com/16789070/184022312-a947118a-c777-4fea-b71c-7485efded5b8.webm)
+
+Also displays countdowns for rewards with cooldowns - common for games with Twitch integration. 
