@@ -3,10 +3,13 @@ package login
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"golang.org/x/term"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"strings"
+	"syscall"
 	"ttv-cli/internals/pkg/twitch"
 )
 
@@ -28,20 +31,25 @@ type result struct {
 	AccessToken string `json:"access_token"`
 }
 
-func GetAccessToken(username string, password string) string {
+func GetAccessToken(username string, password string) (string, error) {
 	if len(username) == 0 {
 		fmt.Print("Twitch username: ")
 		if _, err := fmt.Scanln(&username); err != nil {
-			log.Fatalln(err)
+			return "", err
 		}
 	}
 
 	if len(password) == 0 {
 		fmt.Print("Twitch password: ")
-		if _, err := fmt.Scanln(&password); err != nil {
-			log.Fatalln(err)
+		b, err := term.ReadPassword(syscall.Stdin)
+		if err != nil {
+			return "", err
 		}
+		password = string(b)
 	}
+
+	username = strings.TrimSpace(username)
+	password = strings.TrimSpace(password)
 
 	r := request{
 		Username:     username,
@@ -53,26 +61,26 @@ func GetAccessToken(username string, password string) string {
 
 	requestBody, err := json.Marshal(r)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	req, err := http.NewRequest("POST", loginApiUrl, bytes.NewBuffer(requestBody))
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 	req.Header.Add("Client-ID", twitch.DefaultClientId)
 
 	client := &http.Client{}
 	httpResp, err := client.Do(req)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	defer httpResp.Body.Close()
 
 	body, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	if httpResp.StatusCode == 400 {
@@ -83,7 +91,7 @@ func GetAccessToken(username string, password string) string {
 
 		var resp badRequestResponse
 		if err := json.Unmarshal(body, &resp); err != nil {
-			log.Fatalln(err)
+			return "", err
 		}
 
 		// Authy 2FA required
@@ -92,54 +100,54 @@ func GetAccessToken(username string, password string) string {
 		}
 
 		if resp.ErrorCode == 1000 {
-			log.Fatalln("Captcha required for login - this is currently not supported")
+			return "", errors.New("Captcha required for login - this is currently not supported")
 		}
 
-		log.Fatalln("Failed to login: ", string(body))
+		return "", errors.New(fmt.Sprint("Failed to login: ", string(body)))
 	}
 
 	var result result
 	if err := json.Unmarshal(body, &result); err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
-	return result.AccessToken
+	return result.AccessToken, nil
 }
 
-func loginWithAuthy2FA(captchaProof string, r request) string {
+func loginWithAuthy2FA(captchaProof string, r request) (string, error) {
 	r.Captcha.Proof = captchaProof
 
 	fmt.Print("2FA token: ")
 	if _, err := fmt.Scanln(&r.AuthyToken); err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	requestBody, err := json.Marshal(r)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	req, err := http.NewRequest("POST", loginApiUrl, bytes.NewBuffer(requestBody))
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	client := &http.Client{}
 	httpResp, err := client.Do(req)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	defer httpResp.Body.Close()
 
 	body, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
 	var result result
 	if err := json.Unmarshal(body, &result); err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
-	return result.AccessToken
+	return result.AccessToken, nil
 }

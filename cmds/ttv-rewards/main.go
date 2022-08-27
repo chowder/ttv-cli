@@ -19,7 +19,12 @@ func main() {
 
 	c := config.CreateOrRead()
 	if len(c.AuthToken) == 0 {
-		c.AuthToken = login.GetAccessToken("", "")
+		authToken, err := login.GetAccessToken("", "")
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		c.AuthToken = authToken
 		c.Save()
 	}
 

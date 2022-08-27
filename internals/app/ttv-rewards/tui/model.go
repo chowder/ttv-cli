@@ -19,6 +19,7 @@ type Model struct {
 }
 
 func NewModel(streamer string, authToken string) Model {
+	//listModel := list.New(make([]list.Item, 0), list.NewDefaultDelegate(), 0, 0)
 	m := Model{
 		twitchChannel:        channel.GetChannel(streamer),
 		authToken:            authToken,

@@ -20,30 +20,44 @@ type tick int
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case initialRewards:
-		var cmd tea.Cmd
-		cmd = m.list.SetItems(msg)
+		cmd := m.list.SetItems(msg)
 		return m, tea.Batch(cmd, m.processUpdates, m.tick())
+
 	case updatedReward:
-		item := m.itemsById[msg.Id]
+		// Reward has been paused or disabled, remove it from the list
 		if msg.IsPaused || !msg.IsEnabled {
+			for index, listItem := range m.list.Items() {
+				if listItem.(item).RewardId == msg.Id {
+					m.list.RemoveItem(index)
+				}
+			}
 			delete(m.itemsById, msg.Id)
-		} else {
+		} else if item, ok := m.itemsById[msg.Id]; ok {
 			item.CooldownExpiresAt = msg.CooldownExpiresAt
 		}
 		return m, m.processUpdates
+
 	case tick:
 		cmd := m.list.SetItems(m.list.Items()) // Force re-render
-		return m, tea.Batch(cmd, m.tick(), m.processUpdates)
+		return m, tea.Batch(cmd, m.tick())
+
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
 			selected := m.list.SelectedItem().(*item)
+			// Don't attempt to redeem if the reward is still on cooldown
+			if selected.GetExpiry().Seconds() > 0 {
+				cmd := m.list.NewStatusMessage("Out of stock!")
+				return m, cmd
+			}
 			m.redeemReward(selected)
 			cmd := m.list.NewStatusMessage(fmt.Sprintf("Redeemed '%s'", selected.Title_))
 			return m, cmd
 		}
+
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
+
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
 		m.list.SetSize(msg.Width-h, msg.Height-v)
