@@ -1,4 +1,4 @@
-module ttv-tools
+module ttv-cli
 
 go 1.18
 

@@ -5,7 +5,7 @@ import (
 	"github.com/fatih/color"
 	"log"
 	"time"
-	"ttv-tools/internals/pkg/twitch/gql"
+	"ttv-cli/internals/pkg/twitch/gql"
 )
 
 func FmtDuration(d time.Duration) string {

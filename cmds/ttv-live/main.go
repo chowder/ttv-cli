@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
-	"ttv-tools/internals/app/ttv-live/config"
-	"ttv-tools/internals/pkg/twitch/gql"
-	"ttv-tools/internals/pkg/utils"
+	"ttv-cli/internals/app/ttv-live/config"
+	"ttv-cli/internals/pkg/twitch/gql"
+	"ttv-cli/internals/pkg/utils"
 )
 
 func main() {

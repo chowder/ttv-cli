@@ -10,8 +10,8 @@ import (
 	"log"
 	"sort"
 	"time"
-	"ttv-tools/internals/pkg/twitch/gql"
-	"ttv-tools/internals/pkg/twitch/pubsub"
+	"ttv-cli/internals/pkg/twitch/gql"
+	"ttv-cli/internals/pkg/twitch/pubsub"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)

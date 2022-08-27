@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
-	"ttv-tools/internals/app/ttv-rewards/tui"
+	"ttv-cli/internals/app/ttv-rewards/tui"
 )
 
 func main() {
