@@ -84,8 +84,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(cmd, m.processUpdates, m.tick())
 	case updatedReward:
 		item := m.itemsById[msg.Id]
-		item.CooldownExpiresAt = msg.CooldownExpiresAt
-		m.list.Title = fmt.Sprintf("Latest redemption: %s", msg.Title)
+		if msg.IsPaused || msg.IsEnabled {
+			delete(m.itemsById, msg.Id)
+		} else {
+			item.CooldownExpiresAt = msg.CooldownExpiresAt
+			m.list.Title = fmt.Sprintf("Latest redemption: %s", msg.Title)
+		}
 		return m, m.processUpdates
 	case tick:
 		var cmd tea.Cmd
@@ -117,6 +121,9 @@ func (m Model) getRewards() tea.Msg {
 
 	items := make(initialRewards, 0)
 	for _, reward := range rewards {
+		if reward.IsPaused || !reward.IsEnabled {
+			continue
+		}
 		title := fmt.Sprintf("%s (%d points)", reward.Title, reward.Cost)
 		description := reward.Prompt
 		item := item{Title_: title, Desc: description, CooldownExpiresAt: reward.CooldownExpiresAt}

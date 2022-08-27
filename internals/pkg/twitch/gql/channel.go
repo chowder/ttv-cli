@@ -25,6 +25,7 @@ const getChannelQuery = `query Channel($name: String) {
 					isEnabled
 				}
 				isPaused
+				isEnabled
 			}
 		}
 	}
@@ -60,6 +61,8 @@ type CommunityPointsCustomReward struct {
 	Id                    string                                           `json:"id"`
 	CooldownExpiresAt     string                                           `json:"cooldownExpiresAt"`
 	GlobalCooldownSetting CommunityPointsCustomRewardGlobalCooldownSetting `json:"globalCooldownSetting"`
+	IsPaused              bool                                             `json:"isPaused"`
+	IsEnabled             bool                                             `json:"isEnabled"`
 }
 
 type CommunityPointsCustomRewardGlobalCooldownSetting struct {
