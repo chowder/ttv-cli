@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"fmt"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"sort"
@@ -25,7 +26,7 @@ func NewModel(streamer string, authToken string) Model {
 		itemsById:            make(map[string]*item),
 		rewardsUpdateChannel: make(chan pubsub.CommunityPointsChannelResponse),
 	}
-	//m.list.Title = "Rewards"
+	m.list.Title = fmt.Sprintf("%s's Rewards", m.twitchChannel.DisplayName)
 	return m
 }
 
