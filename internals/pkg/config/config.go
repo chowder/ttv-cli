@@ -31,13 +31,14 @@ func CreateOrRead() Config {
 		if os.IsNotExist(err) {
 			return createDefaultConfig()
 		}
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	var config Config
 	if err = json.Unmarshal(contents, &config); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
+	// TODO: Verify that config.AuthToken is valid
 	return config
 }
 
