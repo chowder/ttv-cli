@@ -2,7 +2,9 @@ package tui
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/Adeithe/go-twitch"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -64,11 +66,7 @@ func NewModel(streamer string) Model {
 
 func (m Model) Init() tea.Cmd {
 	ctx := context.Background() // TODO: Close this context on app exit
-	go func() {
-		if err := pubsub.CommunityPointsChannel(ctx, m.twitchChannel.Id, m.rewardsUpdateChannel); err != nil {
-			log.Fatalln(err)
-		}
-	}()
+	go m.subscribeToRewards(ctx)
 	return tea.Batch(m.getInitialRewards, m.tick())
 }
 
@@ -88,12 +86,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			delete(m.itemsById, msg.Id)
 		} else {
 			item.CooldownExpiresAt = msg.CooldownExpiresAt
-			m.list.Title = fmt.Sprintf("Latest redemption: %s", msg.Title)
 		}
 		return m, m.processUpdates
 	case tick:
 		var cmd tea.Cmd
-		cmd = m.list.SetItems(m.list.Items())
+		cmd = m.list.SetItems(m.list.Items()) // Force re-render
 		return m, tea.Batch(cmd, m.tick(), m.processUpdates)
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
@@ -132,6 +129,28 @@ func (m Model) getInitialRewards() tea.Msg {
 	}
 
 	return items
+}
+
+func (m Model) subscribeToRewards(ctx context.Context) {
+	p := twitch.PubSub()
+	err := p.Listen("community-points-channel-v1", m.twitchChannel.Id)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	defer p.Close()
+
+	handleUpdate := func(_ int, _ string, data []byte) {
+		response := pubsub.CommunityPointsChannelResponse{}
+		if err := json.Unmarshal(data, &response); err != nil {
+			log.Fatalln(err)
+		}
+		m.rewardsUpdateChannel <- response
+	}
+
+	p.OnShardMessage(handleUpdate)
+
+	<-ctx.Done()
 }
 
 func (m Model) processUpdates() tea.Msg {

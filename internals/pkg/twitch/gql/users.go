@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"ttv-cli/internals/pkg/twitch"
 )
 
 const getUsersQuery = `query Users($logins: [String!]) {
@@ -69,11 +70,11 @@ func GetUsers(logins []string) []User {
 	}
 
 	// Make a POST request
-	req, err := http.NewRequest("POST", gqlApiUrl, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", twitch.GqlApiUrl, bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Fatalln(err)
 	}
-	req.Header.Add("Client-ID", defaultClientId)
+	req.Header.Add("Client-ID", twitch.DefaultClientId)
 
 	// Execute the POST request
 	client := &http.Client{}

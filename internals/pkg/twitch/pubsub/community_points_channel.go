@@ -1,12 +1,5 @@
 package pubsub
 
-import (
-	"context"
-	"encoding/json"
-	"github.com/Adeithe/go-twitch"
-	"log"
-)
-
 type Image struct {
 	Url1x string `json:"url_1x"`
 	Url2x string `json:"url_2x"`
@@ -38,24 +31,4 @@ type Data struct {
 type CommunityPointsChannelResponse struct {
 	Type string `json:"type"`
 	Data Data   `json:"data"`
-}
-
-func CommunityPointsChannel(ctx context.Context, channelId string, out chan CommunityPointsChannelResponse) error {
-	pubsub := twitch.PubSub()
-	err := pubsub.Listen("community-points-channel-v1", channelId)
-	if err != nil {
-		return err
-	}
-
-	handleUpdate := func(_ int, _ string, data []byte) {
-		response := CommunityPointsChannelResponse{}
-		if err := json.Unmarshal(data, &response); err != nil {
-			log.Fatalln(err)
-		}
-		out <- response
-	}
-
-	pubsub.OnShardMessage(handleUpdate)
-	<-ctx.Done()
-	return nil
 }
