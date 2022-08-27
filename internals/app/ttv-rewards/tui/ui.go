@@ -69,7 +69,7 @@ func (m Model) Init() tea.Cmd {
 			log.Fatalln(err)
 		}
 	}()
-	return tea.Batch(m.getRewards, m.tick())
+	return tea.Batch(m.getInitialRewards, m.tick())
 }
 
 type initialRewards []list.Item
@@ -84,7 +84,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(cmd, m.processUpdates, m.tick())
 	case updatedReward:
 		item := m.itemsById[msg.Id]
-		if msg.IsPaused || msg.IsEnabled {
+		if msg.IsPaused || !msg.IsEnabled {
 			delete(m.itemsById, msg.Id)
 		} else {
 			item.CooldownExpiresAt = msg.CooldownExpiresAt
@@ -113,7 +113,7 @@ func (m Model) View() string {
 	return docStyle.Render(m.list.View())
 }
 
-func (m Model) getRewards() tea.Msg {
+func (m Model) getInitialRewards() tea.Msg {
 	rewards := m.twitchChannel.CommunityPointsSettings.CustomRewards
 	sort.Slice(rewards[:], func(l, r int) bool {
 		return rewards[l].Cost < rewards[r].Cost
@@ -128,7 +128,7 @@ func (m Model) getRewards() tea.Msg {
 		description := reward.Prompt
 		item := item{Title_: title, Desc: description, CooldownExpiresAt: reward.CooldownExpiresAt}
 		m.itemsById[reward.Id] = &item
-		items = append(items, item)
+		items = append(items, &item)
 	}
 
 	return items
