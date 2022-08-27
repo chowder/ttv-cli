@@ -1,13 +1,9 @@
-package gql
+package channel
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"ttv-cli/internals/pkg/twitch"
+	"ttv-cli/internals/pkg/twitch/gql"
 )
 
 const getChannelQuery = `query Channel($name: String) {
@@ -75,40 +71,11 @@ func GetChannel(name string) Channel {
 	request := GetChannelRequest{Query: getChannelQuery}
 	request.Variables.Name = name
 
-	requestBody, err := json.Marshal(request)
+	body, err := gql.Post(request)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	// Make a POST request
-	req, err := http.NewRequest("POST", twitch.GqlApiUrl, bytes.NewBuffer(requestBody))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	req.Header.Add("Client-ID", twitch.DefaultClientId)
-
-	// Execute the POST request
-	client := &http.Client{}
-	httpResp, err := client.Do(req)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Panic(err)
-		}
-	}(httpResp.Body)
-
-	// Read the response body
-	body, err := ioutil.ReadAll(httpResp.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Unmarshal response
 	var response GetChannelResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		log.Fatalln(err)

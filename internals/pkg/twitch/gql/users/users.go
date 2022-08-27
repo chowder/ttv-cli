@@ -1,13 +1,9 @@
-package gql
+package users
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"ttv-cli/internals/pkg/twitch"
+	"ttv-cli/internals/pkg/twitch/gql"
 )
 
 const getUsersQuery = `query Users($logins: [String!]) {
@@ -64,42 +60,13 @@ func GetUsers(logins []string) []User {
 	// Create POST request body
 	request := makeRequest(logins)
 
-	requestBody, err := json.Marshal(request)
+	gqlResp, err := gql.Post(request)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	// Make a POST request
-	req, err := http.NewRequest("POST", twitch.GqlApiUrl, bytes.NewBuffer(requestBody))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	req.Header.Add("Client-ID", twitch.DefaultClientId)
-
-	// Execute the POST request
-	client := &http.Client{}
-	httpResp, err := client.Do(req)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Panic(err)
-		}
-	}(httpResp.Body)
-
-	// Read the response body
-	body, err := ioutil.ReadAll(httpResp.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Unmarshal response
 	var response Response
-	if err := json.Unmarshal(body, &response); err != nil {
+	if err := json.Unmarshal(gqlResp, &response); err != nil {
 		log.Fatalln(err)
 	}
 

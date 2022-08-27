@@ -2,23 +2,23 @@ package main
 
 import (
 	"log"
-	"ttv-cli/internals/app/ttv-live/config"
-	"ttv-cli/internals/pkg/twitch/gql"
+	"ttv-cli/internals/pkg/config"
+	"ttv-cli/internals/pkg/twitch/gql/users"
 	"ttv-cli/internals/pkg/utils"
 )
 
 func main() {
-	c := config.CreateOrReadFromFile(config.GetDefaultConfigFile())
+	c := config.CreateOrRead()
 	if len(c.Streamers) == 0 {
-		log.Fatalf("No streamers specified in config, please populate '%s' with a list of streamers\n", config.GetDefaultConfigFile())
+		log.Fatalf("No streamers specified in config, please populate '%s' with a list of streamers\n", config.GetConfigFilePath())
 	}
 
 	// Get all streamers from Twitch API
-	streamers := gql.GetUsers(c.Streamers)
+	streamers := users.GetUsers(c.Streamers)
 
 	// Filter between live and offline streamers
-	online := make([]gql.User, 0)
-	offline := make([]gql.User, 0)
+	online := make([]users.User, 0)
+	offline := make([]users.User, 0)
 
 	for _, user := range streamers {
 		if user.Stream.CreatedAt != "" {

@@ -1,11 +1,13 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"github.com/fatih/color"
 	"log"
 	"time"
-	"ttv-cli/internals/pkg/twitch/gql"
+	"ttv-cli/internals/pkg/twitch/gql/users"
 )
 
 func FmtDuration(d time.Duration) string {
@@ -21,7 +23,7 @@ func FmtDuration(d time.Duration) string {
 	return fmt.Sprintf("%1dh%02dm", h, m)
 }
 
-func DisplayUserLive(user gql.User) {
+func DisplayUserLive(user users.User) {
 	green := color.New(color.FgHiGreen).SprintFunc()
 	yellow := color.New(color.FgHiYellow).SprintFunc()
 
@@ -39,9 +41,18 @@ func DisplayUserLive(user gql.User) {
 	fmt.Println("  \u2022", green(streamer), ":", green(directory), yellow("(", FmtDuration(duration), ")"))
 }
 
-func DisplayUserOffline(user gql.User) {
+func DisplayUserOffline(user users.User) {
 	red := color.New(color.FgHiRed).SprintFunc()
 	streamer := fmt.Sprintf("%-10s", user.DisplayName)
 
 	fmt.Println("  \u2022", red(streamer), ":", red("(offline)"))
+}
+
+func TokenHex(length int) string {
+	b := make([]byte, length)
+	_, err := rand.Read(b)
+	if err != nil {
+		log.Fatalln("Error reading random token: ", err)
+	}
+	return hex.EncodeToString(b)
 }
