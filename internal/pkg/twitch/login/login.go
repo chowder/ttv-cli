@@ -41,7 +41,8 @@ func GetAccessToken(username string, password string) (string, error) {
 
 	if len(password) == 0 {
 		fmt.Print("Twitch password: ")
-		b, err := term.ReadPassword(syscall.Stdin)
+		//goland:noinspection GoRedundantConversion - This type cast is required for Windows
+		b, err := term.ReadPassword(int(syscall.Stdin))
 		fmt.Println()
 		if err != nil {
 			return "", err
