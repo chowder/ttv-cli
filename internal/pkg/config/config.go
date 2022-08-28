@@ -9,8 +9,7 @@ import (
 )
 
 type Config struct {
-	Streamers []string `json:"streamers"`
-	AuthToken string   `json:"auth_token"`
+	AuthToken string `json:"auth_token"`
 }
 
 func GetConfigFilePath() string {
@@ -19,7 +18,7 @@ func GetConfigFilePath() string {
 }
 
 func createDefaultConfig() Config {
-	emptyConfig := Config{Streamers: []string{}, AuthToken: ""}
+	emptyConfig := Config{AuthToken: ""}
 	emptyConfig.Save()
 	return emptyConfig
 }
