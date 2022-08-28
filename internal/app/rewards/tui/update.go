@@ -91,11 +91,12 @@ func (m Model) subscribeToRewards(ctx context.Context) {
 }
 
 func (m Model) processUpdates() tea.Msg {
-	update := <-m.rewardsUpdateChannel
-	if update.Type == "custom-reward-updated" {
-		return updatedReward(update.Data.UpdatedReward)
+	for update := range m.rewardsUpdateChannel {
+		if update.Type == "custom-reward-updated" {
+			return updatedReward(update.Data.UpdatedReward)
+		}
 	}
-	return nil
+	return nil // Unreachable
 }
 
 func (m Model) tick() tea.Cmd {

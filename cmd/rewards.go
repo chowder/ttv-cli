@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"strings"
-	"ttv-cli/internal/app/ttv-rewards/tui"
+	"ttv-cli/internal/app/rewards/tui"
 	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/login"
 )
