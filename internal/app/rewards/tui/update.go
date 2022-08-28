@@ -9,7 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"log"
 	"time"
-	redeem "ttv-cli/internal/pkg/twitch/gql/redeem_custom_reward"
+	redeem "ttv-cli/internal/pkg/twitch/gql/operation/redeemcustomreward"
 	"ttv-cli/internal/pkg/twitch/pubsub"
 )
 

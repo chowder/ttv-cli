@@ -4,13 +4,13 @@ A collection of programs to help the average chatter use Twitch from the command
 
 ## `live`
 
-Checks whether your favourite Twitch streamers are currently live. 
+Checks whether your followed streamers are currently live. 
 
 <img src="https://user-images.githubusercontent.com/16789070/187073425-68ab32a8-a669-4e80-b429-831ff03eb01b.png" width="600" />
 
 ## `rewards`
 
-View and redeem Twitch channel point rewards from the command line. 
+View (and redeem!) Twitch channel point rewards from the command line. 
 
 <img src="https://user-images.githubusercontent.com/16789070/187073395-ed50fc3f-49f7-4fcb-bc78-20330db00088.png" width="400" />
 

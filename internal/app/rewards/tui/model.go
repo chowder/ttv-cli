@@ -6,7 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"sort"
-	"ttv-cli/internal/pkg/twitch/gql/channel"
+	"ttv-cli/internal/pkg/twitch/gql/query/channel"
 	"ttv-cli/internal/pkg/twitch/pubsub"
 )
 

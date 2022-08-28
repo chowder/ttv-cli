@@ -9,6 +9,7 @@ import (
 const getUsersQuery = `query Users($logins: [String!]) {
     users(logins: $logins) {
         displayName
+		login
         profileURL
         stream {
             game {
@@ -31,6 +32,7 @@ type request struct {
 
 type User struct {
 	DisplayName string `json:"displayName"`
+	Login       string `json:"login"`
 	ProfileURL  string `json:"profileURL"`
 	Stream      struct {
 		Game struct {

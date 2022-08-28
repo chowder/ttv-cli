@@ -1,4 +1,4 @@
-package redeem_custom_reward
+package redeemcustomreward
 
 import (
 	"ttv-cli/internal/pkg/twitch/gql"
