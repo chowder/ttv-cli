@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"syscall"
-	"ttv-cli/internals/pkg/twitch"
+	"ttv-cli/internal/pkg/twitch"
 )
 
 const loginApiUrl = "https://passport.twitch.tv/login"
@@ -42,6 +42,7 @@ func GetAccessToken(username string, password string) (string, error) {
 	if len(password) == 0 {
 		fmt.Print("Twitch password: ")
 		b, err := term.ReadPassword(syscall.Stdin)
+		fmt.Println()
 		if err != nil {
 			return "", err
 		}

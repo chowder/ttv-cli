@@ -1,8 +1,8 @@
 package redeem_custom_reward
 
 import (
-	"ttv-cli/internals/pkg/twitch/gql"
-	"ttv-cli/internals/pkg/utils"
+	"ttv-cli/internal/pkg/twitch/gql"
+	"ttv-cli/internal/pkg/utils"
 )
 
 type variables struct {

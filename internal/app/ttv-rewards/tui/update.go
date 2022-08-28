@@ -9,8 +9,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"log"
 	"time"
-	redeem "ttv-cli/internals/pkg/twitch/gql/redeem_custom_reward"
-	"ttv-cli/internals/pkg/twitch/pubsub"
+	redeem "ttv-cli/internal/pkg/twitch/gql/redeem_custom_reward"
+	"ttv-cli/internal/pkg/twitch/pubsub"
 )
 
 type initialRewards []list.Item

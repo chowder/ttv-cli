@@ -6,8 +6,8 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"sort"
-	"ttv-cli/internals/pkg/twitch/gql/channel"
-	"ttv-cli/internals/pkg/twitch/pubsub"
+	"ttv-cli/internal/pkg/twitch/gql/channel"
+	"ttv-cli/internal/pkg/twitch/pubsub"
 )
 
 type Model struct {

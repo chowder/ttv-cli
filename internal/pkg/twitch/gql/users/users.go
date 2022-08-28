@@ -3,7 +3,7 @@ package users
 import (
 	"encoding/json"
 	"log"
-	"ttv-cli/internals/pkg/twitch/gql"
+	"ttv-cli/internal/pkg/twitch/gql"
 )
 
 const getUsersQuery = `query Users($logins: [String!]) {
