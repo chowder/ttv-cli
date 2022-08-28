@@ -2,32 +2,22 @@
 
 A collection of programs to help the average chatter use Twitch from the command line
 
-## `ttv-live`
+## `live`
 
 Checks whether your favourite Twitch streamers are currently live. 
 
-<img src="https://user-images.githubusercontent.com/16789070/182046526-6cc16a6d-32e1-4902-aef9-af8a7905b72b.png" width="600" />
+<img src="https://user-images.githubusercontent.com/16789070/187073425-68ab32a8-a669-4e80-b429-831ff03eb01b.png" width="600" />
 
-### Configuration
-
-Populate your `~/.config/ttv-cli/ttv-cli.config` file with the list of streamers to track.
-
-```json
-{
-  "streamers": [
-    "xqc",
-    "skillspecs",
-    "dismellion",
-    "dino_xx",
-    "usteppin"
-  ]
-}
-```
-
-## `ttv-points`
+## `rewards`
 
 View and redeem Twitch channel point rewards from the command line. 
 
-[ttv-rewards.webm](https://user-images.githubusercontent.com/16789070/184022312-a947118a-c777-4fea-b71c-7485efded5b8.webm)
+<img src="https://user-images.githubusercontent.com/16789070/187073395-ed50fc3f-49f7-4fcb-bc78-20330db00088.png" width="400" />
 
 Also displays countdowns for rewards with cooldowns - common for games with Twitch integration. 
+
+## `token`
+
+Generate Twitch OAuth tokens (supports Authy 2FA)
+
+<img src="https://user-images.githubusercontent.com/16789070/187073690-77566262-fb65-44ca-9953-9884d868a227.png" width="460" />
