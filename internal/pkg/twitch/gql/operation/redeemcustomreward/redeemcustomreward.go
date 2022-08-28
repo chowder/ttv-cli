@@ -1,6 +1,7 @@
 package redeemcustomreward
 
 import (
+	"fmt"
 	"ttv-cli/internal/pkg/twitch/gql"
 	"ttv-cli/internal/pkg/utils"
 )
@@ -57,5 +58,6 @@ func makeRequest(channelId string, cost int, prompt string, rewardId string, tit
 
 func RedeemCustomReward(channelId string, cost int, prompt string, rewardId string, title string, authToken string) ([]byte, error) {
 	req := makeRequest(channelId, cost, prompt, rewardId, title)
+	fmt.Println(req)
 	return gql.PostWithAuth(req, authToken)
 }

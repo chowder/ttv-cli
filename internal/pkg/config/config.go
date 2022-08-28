@@ -2,10 +2,12 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
+	"ttv-cli/internal/pkg/twitch/login"
 )
 
 type Config struct {
@@ -37,7 +39,17 @@ func CreateOrRead() Config {
 	if err = json.Unmarshal(contents, &config); err != nil {
 		log.Fatalln(err)
 	}
-	// TODO: Verify that config.AuthToken is valid
+
+	if len(config.AuthToken) == 0 || login.Validate(config.AuthToken) != nil {
+		fmt.Println("Auth token not found or expired, generating a new one for you...")
+		authToken, err := login.GetAccessToken("", "")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		config.AuthToken = authToken
+		config.Save()
+	}
+
 	return config
 }
 
