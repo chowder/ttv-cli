@@ -13,11 +13,12 @@ var docStyle = lipgloss.NewStyle().Margin(1, 2)
 var orange = color.New(color.FgHiRed).SprintFunc()
 
 type item struct {
-	Title_            string
-	Cost              int
-	Prompt            string
-	RewardId          string
-	CooldownExpiresAt string
+	Title_              string
+	Cost                int
+	Prompt              string
+	RewardId            string
+	CooldownExpiresAt   string
+	IsUserInputRequired bool
 }
 
 func (i item) Title() string {

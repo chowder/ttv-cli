@@ -1,20 +1,20 @@
 package redeemcustomreward
 
 import (
-	"fmt"
 	"ttv-cli/internal/pkg/twitch/gql"
 	"ttv-cli/internal/pkg/utils"
 )
 
 type variables struct {
-	Input input `json:"input"`
+	Input Input `json:"input"`
 }
 
-type input struct {
+type Input struct {
 	ChannelID     string `json:"channelID"`
 	Cost          int    `json:"cost"`
 	Prompt        string `json:"prompt"`
 	RewardID      string `json:"rewardID"`
+	TextInput     string `json:"textInput,omitempty"`
 	Title         string `json:"title"`
 	TransactionID string `json:"transactionID"`
 }
@@ -34,18 +34,12 @@ type request struct {
 	Extensions    extensions `json:"extensions"`
 }
 
-func makeRequest(channelId string, cost int, prompt string, rewardId string, title string) request {
+func makeRequest(input Input) request {
+	input.TransactionID = utils.TokenHex(16)
 	return request{
 		OperationName: "RedeemCustomReward",
 		Variables: variables{
-			Input: input{
-				ChannelID:     channelId,
-				Cost:          cost,
-				Prompt:        prompt,
-				RewardID:      rewardId,
-				Title:         title,
-				TransactionID: utils.TokenHex(16),
-			},
+			Input: input,
 		},
 		Extensions: extensions{
 			PersistedQuery: persistedQuery{
@@ -56,8 +50,7 @@ func makeRequest(channelId string, cost int, prompt string, rewardId string, tit
 	}
 }
 
-func RedeemCustomReward(channelId string, cost int, prompt string, rewardId string, title string, authToken string) ([]byte, error) {
-	req := makeRequest(channelId, cost, prompt, rewardId, title)
-	fmt.Println(req)
+func RedeemCustomReward(input Input, authToken string) ([]byte, error) {
+	req := makeRequest(input)
 	return gql.PostWithAuth(req, authToken)
 }

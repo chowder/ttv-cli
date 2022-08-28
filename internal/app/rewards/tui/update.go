@@ -106,7 +106,20 @@ func (m Model) tick() tea.Cmd {
 }
 
 func (m Model) redeemReward(i *item) {
-	_, err := redeem.RedeemCustomReward(m.twitchChannel.Id, i.Cost, i.Prompt, i.RewardId, i.Title_, m.authToken)
+
+	input := redeem.Input{
+		ChannelID: m.twitchChannel.Id,
+		Cost:      i.Cost,
+		Prompt:    i.Prompt,
+		RewardID:  i.RewardId,
+		Title:     i.Title_,
+	}
+
+	if i.IsUserInputRequired {
+		input.TextInput = ":)" // FIXME
+	}
+
+	_, err := redeem.RedeemCustomReward(input, m.authToken)
 	if err != nil {
 		log.Fatalln(err)
 	}

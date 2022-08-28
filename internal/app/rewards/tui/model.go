@@ -53,11 +53,12 @@ func (m Model) getInitialRewards() tea.Msg {
 			continue
 		}
 		item := item{
-			Title_:            reward.Title,
-			Prompt:            reward.Prompt,
-			Cost:              reward.Cost,
-			RewardId:          reward.Id,
-			CooldownExpiresAt: reward.CooldownExpiresAt,
+			Title_:              reward.Title,
+			Prompt:              reward.Prompt,
+			Cost:                reward.Cost,
+			RewardId:            reward.Id,
+			CooldownExpiresAt:   reward.CooldownExpiresAt,
+			IsUserInputRequired: reward.IsUserInputRequired,
 		}
 		m.itemsById[reward.Id] = &item
 		items = append(items, &item)
