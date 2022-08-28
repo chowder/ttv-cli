@@ -28,6 +28,9 @@ func (i item) Title() string {
 	}
 
 	expiresIn := i.GetExpiry()
+	if expiresIn.Seconds() <= 0 {
+		return title
+	}
 
 	return orange(fmt.Sprintf("%s - %s", title, expiresIn.String()))
 }
