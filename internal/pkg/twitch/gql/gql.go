@@ -3,6 +3,7 @@ package gql
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -48,6 +49,10 @@ func post(request any, authToken string) ([]byte, error) {
 	body, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	if httpResp.StatusCode != 200 {
+		return nil, errors.New(string(body)) // TODO: Narrow this to just the error
 	}
 
 	return body, nil

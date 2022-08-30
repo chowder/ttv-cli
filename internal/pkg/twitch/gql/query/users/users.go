@@ -2,13 +2,13 @@ package users
 
 import (
 	"encoding/json"
-	"log"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
 const getUsersQuery = `query Users($logins: [String!]) {
     users(logins: $logins) {
         displayName
+		id
 		login
         profileURL
         stream {
@@ -32,6 +32,7 @@ type request struct {
 
 type User struct {
 	DisplayName string `json:"displayName"`
+	Id          string `json:"id"`
 	Login       string `json:"login"`
 	ProfileURL  string `json:"profileURL"`
 	Stream      struct {
@@ -58,19 +59,18 @@ func makeRequest(logins []string) request {
 	}
 }
 
-func GetUsers(logins []string) []User {
-	// Create POST request body
+func GetUsers(logins []string) ([]User, error) {
 	request := makeRequest(logins)
 
 	gqlResp, err := gql.Post(request)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	var response Response
 	if err := json.Unmarshal(gqlResp, &response); err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
-	return response.Data.Users
+	return response.Data.Users, nil
 }

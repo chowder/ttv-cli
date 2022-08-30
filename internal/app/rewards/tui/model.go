@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"log"
 	"sort"
 	"ttv-cli/internal/pkg/twitch/gql/query/channel"
 	"ttv-cli/internal/pkg/twitch/pubsub"
@@ -19,14 +20,22 @@ type Model struct {
 }
 
 func NewModel(streamer string, authToken string) Model {
-	//listModel := list.New(make([]list.Item, 0), list.NewDefaultDelegate(), 0, 0)
+	c, err := channel.GetChannel(streamer)
+	if err != nil {
+		log.Fatalf("Failed to get channel information for '%s' - %s", streamer, err)
+	}
+	if len(c.Id) == 0 {
+		log.Fatalf("Could not find channel for '%s'\n", streamer)
+	}
+
 	m := Model{
-		twitchChannel:        channel.GetChannel(streamer),
+		twitchChannel:        c,
 		authToken:            authToken,
 		list:                 list.New(make([]list.Item, 0), list.NewDefaultDelegate(), 0, 0),
 		itemsById:            make(map[string]*item),
 		rewardsUpdateChannel: make(chan pubsub.CommunityPointsChannelResponse),
 	}
+
 	m.list.Title = fmt.Sprintf("%s's Rewards", m.twitchChannel.DisplayName)
 	return m
 }

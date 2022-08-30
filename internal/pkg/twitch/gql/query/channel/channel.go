@@ -2,7 +2,6 @@ package channel
 
 import (
 	"encoding/json"
-	"log"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
@@ -71,19 +70,20 @@ type CommunityPointsCustomRewardGlobalCooldownSetting struct {
 	IsEnabled             bool `json:"isEnabled"`
 }
 
-func GetChannel(name string) Channel {
+// GetChannel Note that this function will not throw if a channel was not found for the provided name
+func GetChannel(name string) (Channel, error) {
 	request := GetChannelRequest{Query: getChannelQuery}
 	request.Variables.Name = name
 
 	body, err := gql.Post(request)
 	if err != nil {
-		log.Fatalln(err)
+		return Channel{}, err
 	}
 
 	var response GetChannelResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		log.Fatalln(err)
+		return Channel{}, err
 	}
 
-	return response.Data.Channel
+	return response.Data.Channel, nil
 }

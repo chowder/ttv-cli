@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
+	"log"
 	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelfollows"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
@@ -21,14 +23,20 @@ var liveCmd = &cobra.Command{
 		}
 
 		// Get all streamers from Twitch API
-		streamers := users.GetUsers(s)
+		streamers, err := users.GetUsers(s)
+		if err != nil {
+			log.Fatalf("Could not get channel information - %s\n", err)
+		}
 
 		// Filter between live and offline streamers
 		online := make([]users.User, 0)
 		offline := make([]users.User, 0)
 
-		for _, user := range streamers {
-			if user.Stream.CreatedAt != "" {
+		for i, user := range streamers {
+			if len(user.Id) == 0 {
+				fmt.Printf("Could not find channel information for '%s'\n", s[i])
+				continue
+			} else if user.Stream.CreatedAt != "" {
 				online = append(online, user)
 			} else {
 				offline = append(offline, user)

@@ -27,7 +27,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Reward has been paused or disabled, remove it from the list
 		if msg.IsPaused || !msg.IsEnabled {
 			for index, listItem := range m.list.Items() {
-				if listItem.(item).RewardId == msg.Id {
+				if listItem.(*item).RewardId == msg.Id {
 					m.list.RemoveItem(index)
 				}
 			}
