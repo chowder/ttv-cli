@@ -60,7 +60,7 @@ func (c Config) Save() {
 		log.Fatal(err)
 	}
 
-	err = os.MkdirAll(path.Base(configFilePath), 0755)
+	err = os.MkdirAll(path.Dir(configFilePath), 0755)
 	if err != nil && !os.IsExist(err) {
 		log.Fatal(err)
 	}
