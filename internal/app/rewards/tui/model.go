@@ -8,7 +8,7 @@ import (
 	"log"
 	"sort"
 	"ttv-cli/internal/pkg/twitch/gql/query/channel"
-	"ttv-cli/internal/pkg/twitch/pubsub"
+	"ttv-cli/internal/pkg/twitch/pubsub/communitypointschannel"
 )
 
 type Model struct {
@@ -16,7 +16,7 @@ type Model struct {
 	authToken            string
 	list                 list.Model
 	itemsById            map[string]*item
-	rewardsUpdateChannel chan pubsub.CommunityPointsChannelResponse
+	rewardsUpdateChannel chan communitypointschannel.Response
 }
 
 func NewModel(streamer string, authToken string) Model {
@@ -33,7 +33,7 @@ func NewModel(streamer string, authToken string) Model {
 		authToken:            authToken,
 		list:                 list.New(make([]list.Item, 0), list.NewDefaultDelegate(), 0, 0),
 		itemsById:            make(map[string]*item),
-		rewardsUpdateChannel: make(chan pubsub.CommunityPointsChannelResponse),
+		rewardsUpdateChannel: make(chan communitypointschannel.Response),
 	}
 
 	m.list.Title = fmt.Sprintf("%s's Rewards", m.twitchChannel.DisplayName)

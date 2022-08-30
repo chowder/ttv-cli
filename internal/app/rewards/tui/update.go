@@ -9,12 +9,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"log"
 	"time"
-	redeem "ttv-cli/internal/pkg/twitch/gql/operation/redeemcustomreward"
-	"ttv-cli/internal/pkg/twitch/pubsub"
+	"ttv-cli/internal/pkg/twitch/gql/operation/redeemcustomreward"
+	"ttv-cli/internal/pkg/twitch/pubsub/communitypointschannel"
 )
 
 type initialRewards []list.Item
-type updatedReward pubsub.UpdatedReward
+type updatedReward communitypointschannel.UpdatedReward
 type tick int
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -78,7 +78,7 @@ func (m Model) subscribeToRewards(ctx context.Context) {
 	defer p.Close()
 
 	handleUpdate := func(_ int, _ string, data []byte) {
-		response := pubsub.CommunityPointsChannelResponse{}
+		response := communitypointschannel.Response{}
 		if err := json.Unmarshal(data, &response); err != nil {
 			log.Fatalln(err)
 		}
@@ -107,7 +107,7 @@ func (m Model) tick() tea.Cmd {
 
 func (m Model) redeemReward(i *item) {
 
-	input := redeem.Input{
+	input := redeemcustomreward.Input{
 		ChannelID: m.twitchChannel.Id,
 		Cost:      i.Cost,
 		Prompt:    i.Prompt,
@@ -119,7 +119,7 @@ func (m Model) redeemReward(i *item) {
 		input.TextInput = ":)" // FIXME
 	}
 
-	_, err := redeem.RedeemCustomReward(input, m.authToken)
+	_, err := redeemcustomreward.Redeem(input, m.authToken)
 	if err != nil {
 		log.Fatalln(err)
 	}

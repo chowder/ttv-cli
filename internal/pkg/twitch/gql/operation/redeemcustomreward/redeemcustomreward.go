@@ -50,7 +50,7 @@ func makeRequest(input Input) request {
 	}
 }
 
-func RedeemCustomReward(input Input, authToken string) ([]byte, error) {
+func Redeem(input Input, authToken string) ([]byte, error) {
 	req := makeRequest(input)
 	return gql.PostWithAuth(req, authToken)
 }

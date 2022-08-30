@@ -1,4 +1,4 @@
-package pubsub
+package communitypointschannel
 
 type Image struct {
 	Url1x string `json:"url_1x"`
@@ -28,7 +28,7 @@ type Data struct {
 	UpdatedReward UpdatedReward `json:"updated_reward"`
 }
 
-type CommunityPointsChannelResponse struct {
+type Response struct {
 	Type string `json:"type"`
 	Data Data   `json:"data"`
 }

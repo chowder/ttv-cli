@@ -8,8 +8,8 @@ import (
 	"log"
 	"strings"
 	"time"
-	moments "ttv-cli/internal/pkg/twitch/gql/operation/communitymomentcalloutclaim"
-	pubsub2 "ttv-cli/internal/pkg/twitch/pubsub"
+	"ttv-cli/internal/pkg/twitch/gql/operation/communitymomentcalloutclaim"
+	"ttv-cli/internal/pkg/twitch/pubsub/communitymomentschannel"
 )
 
 const topic = "community-moments-channel-v1"
@@ -27,14 +27,14 @@ func MineMoments(c *pubsub.Client, streamerByIds map[string]string, authToken st
 	handleUpdate := func(shard int, topic string, data []byte) {
 		fmt.Printf("Shard #%d > %s %s\n", shard, topic, strings.TrimSpace(string(data)))
 
-		var resp pubsub2.CommunityMomentsChannelResponse
+		var resp communitymomentschannel.Response
 		if err := json.Unmarshal(data, &resp); err != nil {
 			log.Println(err)
 		}
 
-		if len(resp.MomentId) > 0 {
-			log.Printf("Attempting to redeem moment ID: '%s'\n", resp.MomentId)
-			err := moments.ClaimCommunityMoment(resp.MomentId, authToken)
+		if len(resp.Data.MomentId) > 0 {
+			log.Printf("Attempting to redeem moment ID: '%s'\n", resp.Data.MomentId)
+			err := communitymomentcalloutclaim.Claim(resp.Data.MomentId, authToken)
 			if err != nil {
 				log.Println(err)
 			}

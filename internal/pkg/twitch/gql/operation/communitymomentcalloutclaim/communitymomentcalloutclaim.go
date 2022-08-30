@@ -45,7 +45,7 @@ func makeRequest(momentId string) request {
 	}
 }
 
-func ClaimCommunityMoment(momentId string, authToken string) error {
+func Claim(momentId string, authToken string) error {
 	req := makeRequest(momentId)
 	resp, err := gql.PostWithAuth(req, authToken)
 	if err != nil {
