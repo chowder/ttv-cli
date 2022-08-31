@@ -21,7 +21,7 @@ func GetConfigFilePath() string {
 
 func createDefaultConfig() Config {
 	emptyConfig := Config{AuthToken: ""}
-	emptyConfig.Save()
+	emptyConfig.validateAuthToken()
 	return emptyConfig
 }
 
@@ -40,17 +40,21 @@ func CreateOrRead() Config {
 		log.Fatalln(err)
 	}
 
-	if len(config.AuthToken) == 0 || login.Validate(config.AuthToken) != nil {
+	config.validateAuthToken()
+
+	return config
+}
+
+func (c Config) validateAuthToken() {
+	if len(c.AuthToken) == 0 || login.Validate(c.AuthToken) != nil {
 		fmt.Println("Auth token not found or expired, generating a new one for you...")
 		authToken, err := login.GetAccessToken("", "")
 		if err != nil {
 			log.Fatalln(err)
 		}
-		config.AuthToken = authToken
-		config.Save()
+		c.AuthToken = authToken
+		c.Save()
 	}
-
-	return config
 }
 
 func (c Config) Save() {
