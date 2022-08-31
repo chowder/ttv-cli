@@ -7,7 +7,6 @@ import (
 	"strings"
 	"ttv-cli/internal/app/rewards/tui"
 	"ttv-cli/internal/pkg/config"
-	"ttv-cli/internal/pkg/twitch/login"
 )
 
 var rewardsCmd = &cobra.Command{
@@ -16,15 +15,9 @@ var rewardsCmd = &cobra.Command{
 	Args:       cobra.ExactArgs(1),
 	ArgAliases: []string{"streamer"},
 	Run: func(cmd *cobra.Command, args []string) {
-		c := config.CreateOrRead()
-		if len(c.AuthToken) == 0 {
-			authToken, err := login.GetAccessToken("", "")
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			c.AuthToken = authToken
-			c.Save()
+		c, err := config.CreateOrRead()
+		if err != nil {
+			log.Fatalf("Error reading config: %s\n", err)
 		}
 
 		s := strings.ToLower(args[0])

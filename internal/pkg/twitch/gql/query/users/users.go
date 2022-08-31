@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"fmt"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
@@ -64,12 +65,12 @@ func GetUsers(logins []string) ([]User, error) {
 
 	gqlResp, err := gql.Post(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetUsers: error with GQL request: %w", err)
 	}
 
 	var response Response
 	if err := json.Unmarshal(gqlResp, &response); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetUsers: error unmarshalling GQL response: %w", err)
 	}
 
 	return response.Data.Users, nil

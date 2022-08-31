@@ -14,7 +14,7 @@ var tokenCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		authToken, err := login.GetAccessToken(os.Getenv("TWITCH_USERNAME"), os.Getenv("TWITCH_PASSWORD"))
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatalf("Could not fetch Twitch access token: %s\n", err)
 		}
 		fmt.Println(authToken)
 	},

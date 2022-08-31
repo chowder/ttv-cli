@@ -48,11 +48,11 @@ func DisplayUserOffline(user users.User) {
 	fmt.Println("  \u2022", red(streamer), ":", red("(offline)"))
 }
 
-func TokenHex(length int) string {
+func TokenHex(length int) (string, error) {
 	b := make([]byte, length)
 	_, err := rand.Read(b)
 	if err != nil {
-		log.Fatalln("Error reading random token: ", err)
+		return "", fmt.Errorf("error reading random token: %w", err)
 	}
-	return hex.EncodeToString(b)
+	return hex.EncodeToString(b), nil
 }

@@ -1,6 +1,7 @@
 package redeemcustomreward
 
 import (
+	"fmt"
 	"ttv-cli/internal/pkg/twitch/gql"
 	"ttv-cli/internal/pkg/utils"
 )
@@ -34,8 +35,13 @@ type request struct {
 	Extensions    extensions `json:"extensions"`
 }
 
-func makeRequest(input Input) request {
-	input.TransactionID = utils.TokenHex(16)
+func makeRequest(input Input) (request, error) {
+	token, err := utils.TokenHex(16)
+	if err != nil {
+		return request{}, fmt.Errorf("could not generate transaction ID: %w", err)
+	}
+
+	input.TransactionID = token
 	return request{
 		OperationName: "RedeemCustomReward",
 		Variables: variables{
@@ -47,10 +53,19 @@ func makeRequest(input Input) request {
 				Sha256Hash: "d56249a7adb4978898ea3412e196688d4ac3cea1c0c2dfd65561d229ea5dcc42",
 			},
 		},
-	}
+	}, nil
 }
 
 func Redeem(input Input, authToken string) ([]byte, error) {
-	req := makeRequest(input)
-	return gql.PostWithAuth(req, authToken)
+	req, err := makeRequest(input)
+	if err != nil {
+		return nil, fmt.Errorf("error generating GQL request: %w", err)
+	}
+
+	resp, err := gql.PostWithAuth(req, authToken)
+	if err != nil {
+		return nil, fmt.Errorf("error with GQL request: %w", err)
+	}
+
+	return resp, nil
 }

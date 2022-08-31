@@ -2,6 +2,7 @@ package channel
 
 import (
 	"encoding/json"
+	"fmt"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
@@ -77,12 +78,12 @@ func GetChannel(name string) (Channel, error) {
 
 	body, err := gql.Post(request)
 	if err != nil {
-		return Channel{}, err
+		return Channel{}, fmt.Errorf("GetChannel: error with GQL request: %w", err)
 	}
 
 	var response GetChannelResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		return Channel{}, err
+		return Channel{}, fmt.Errorf("GetChannel: error unmarshalling GQL response: %w", err)
 	}
 
 	return response.Data.Channel, nil

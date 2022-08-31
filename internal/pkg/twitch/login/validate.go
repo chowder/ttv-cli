@@ -3,6 +3,7 @@ package login
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -19,13 +20,13 @@ func Validate(token string) error {
 
 	httpReq, err := http.NewRequest("GET", validateUrl, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	httpReq.Header.Set("Authorization", "OAuth "+token)
 
 	httpResp, err := client.Do(httpReq)
 	if err != nil {
-		return err
+		return fmt.Errorf("error performing HTTP request: %w", err)
 	}
 
 	defer httpResp.Body.Close()
@@ -33,12 +34,12 @@ func Validate(token string) error {
 	if httpResp.StatusCode == 401 {
 		body, err := ioutil.ReadAll(httpResp.Body)
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading HTTP response body: %w", err)
 		}
 
 		var resp invalidTokenResponse
 		if err = json.Unmarshal(body, &resp); err != nil {
-			return err
+			return fmt.Errorf("error unmarshalling HTTP response body: %w", err)
 		}
 
 		return errors.New(resp.Message)

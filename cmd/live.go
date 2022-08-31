@@ -14,9 +14,16 @@ var liveCmd = &cobra.Command{
 	Use:   "live",
 	Short: "View which of your follows are currently live",
 	Run: func(cmd *cobra.Command, args []string) {
-		c := config.CreateOrRead()
+		c, err := config.CreateOrRead()
+		if err != nil {
+			log.Fatalf("Error reading config: %s\n", err)
+		}
 
-		f := channelfollows.GetChannelFollows(c.AuthToken)
+		f, err := channelfollows.GetChannelFollows(c.AuthToken)
+		if err != nil {
+			log.Fatalf("Error fetching followed channels: %s\n", err)
+		}
+
 		s := make([]string, 0)
 		for _, f := range f {
 			s = append(s, f.Login)

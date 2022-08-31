@@ -49,7 +49,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmd := m.list.NewStatusMessage("Out of stock!")
 				return m, cmd
 			}
-			m.redeemReward(selected)
+			err := m.redeemReward(selected)
+			if err != nil {
+				cmd := m.list.NewStatusMessage("Could not redeem!")
+				return m, cmd
+			}
 			cmd := m.list.NewStatusMessage(fmt.Sprintf("Redeemed '%s'", selected.Title_))
 			return m, cmd
 		}
@@ -105,7 +109,7 @@ func (m Model) tick() tea.Cmd {
 	})
 }
 
-func (m Model) redeemReward(i *item) {
+func (m Model) redeemReward(i *item) error {
 
 	input := redeemcustomreward.Input{
 		ChannelID: m.twitchChannel.Id,
@@ -121,6 +125,8 @@ func (m Model) redeemReward(i *item) {
 
 	_, err := redeemcustomreward.Redeem(input, m.authToken)
 	if err != nil {
-		log.Fatalln(err)
+		return fmt.Errorf("could not redeem reward: %w", err)
 	}
+
+	return nil
 }

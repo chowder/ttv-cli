@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"ttv-cli/internal/pkg/twitch/login"
@@ -19,57 +18,71 @@ func GetConfigFilePath() string {
 	return path.Join(home, "ttv-cli", "ttv-cli.config")
 }
 
-func createDefaultConfig() Config {
+func createDefaultConfig() (Config, error) {
 	emptyConfig := Config{AuthToken: ""}
-	emptyConfig.validateAuthToken()
-	return emptyConfig
+
+	err := emptyConfig.validateAuthToken()
+	if err != nil {
+		return Config{}, fmt.Errorf("createDefaultConfig: error when validating Twitch auth token: %w", err)
+	}
+
+	return emptyConfig, nil
 }
 
-func CreateOrRead() Config {
+func CreateOrRead() (Config, error) {
 	configFilePath := GetConfigFilePath()
 	contents, err := ioutil.ReadFile(configFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return createDefaultConfig()
 		}
-		log.Fatalln(err)
+		return Config{}, fmt.Errorf("CreateOrRead: error when reading config file: %w", err)
 	}
 
 	var config Config
 	if err = json.Unmarshal(contents, &config); err != nil {
-		log.Fatalln(err)
+		return Config{}, fmt.Errorf("CreateOrRead: Error when unmarshalling config file: %w", err)
 	}
 
-	config.validateAuthToken()
+	if err = config.validateAuthToken(); err != nil {
+		return Config{}, fmt.Errorf("CreateOrRead: Error when validating Twitch auth token: %w", err)
+	}
 
-	return config
+	return config, nil
 }
 
-func (c Config) validateAuthToken() {
+func (c Config) validateAuthToken() error {
 	if len(c.AuthToken) == 0 || login.Validate(c.AuthToken) != nil {
 		fmt.Println("Auth token not found or expired, generating a new one for you...")
+
 		authToken, err := login.GetAccessToken("", "")
 		if err != nil {
-			log.Fatalln(err)
+			return fmt.Errorf("validateAuthToken: Error getting Twitch access token: %w", err)
 		}
+
 		c.AuthToken = authToken
-		c.Save()
+		if err := c.Save(); err != nil {
+			return fmt.Errorf("validateAuthToken: Error saving config: %w", err)
+		}
 	}
+	return nil
 }
 
-func (c Config) Save() {
+func (c Config) Save() error {
 	configFilePath := GetConfigFilePath()
 	contents, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = os.MkdirAll(path.Dir(configFilePath), 0755)
 	if err != nil && !os.IsExist(err) {
-		log.Fatal(err)
+		return fmt.Errorf("could not create config directory: %w", err)
 	}
 
 	if err := ioutil.WriteFile(configFilePath, contents, 0644); err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("could not write to config file: %w", err)
 	}
+
+	return nil
 }

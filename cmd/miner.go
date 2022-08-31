@@ -21,7 +21,10 @@ var minerCmd = &cobra.Command{
 }
 
 func run(ctx context.Context, names []string) {
-	cfg := config.CreateOrRead()
+	cfg, err := config.CreateOrRead()
+	if err != nil {
+		log.Fatalf("Error reading config: %s\n", err)
+	}
 
 	p := twitch.PubSub()
 
