@@ -14,6 +14,9 @@ jobs:
           - goarch: arm64
             goos: windows
     steps:
+      - name: Get release information
+        run: |
+          echo "RELEASE_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       - uses: actions/checkout@v3
       - uses: wangyoucao577/go-release-action@v1.30
         with:
