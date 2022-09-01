@@ -19,7 +19,7 @@ var liveCmd = &cobra.Command{
 			log.Fatalf("Error reading config: %s\n", err)
 		}
 
-		f, err := channelfollows.GetChannelFollows(c.AuthToken)
+		f, err := channelfollows.Get(c.AuthToken)
 		if err != nil {
 			log.Fatalf("Error fetching followed channels: %s\n", err)
 		}

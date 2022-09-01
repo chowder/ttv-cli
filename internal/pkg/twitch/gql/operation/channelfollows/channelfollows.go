@@ -93,17 +93,17 @@ type ChannelFollow struct {
 	Login       string
 }
 
-// GetChannelFollows TODO: Implement cursor following to handle >100 follows
-func GetChannelFollows(authToken string) ([]ChannelFollow, error) {
+// Get TODO: Implement cursor following to handle >100 follows
+func Get(authToken string) ([]ChannelFollow, error) {
 	req := makeRequest()
 	respBody, err := gql.PostWithAuth(req, authToken)
 	if err != nil {
-		return nil, fmt.Errorf("GetChannelFollows: error with GQL request: %w", err)
+		return nil, fmt.Errorf("error with GQL request: %w", err)
 	}
 
 	var resp response
 	if err := json.Unmarshal(respBody, &resp); err != nil {
-		return nil, fmt.Errorf("GetChannelFollows: error unmarshalling GQL request: %w", err)
+		return nil, fmt.Errorf("error unmarshalling GQL request: %w", err)
 	}
 
 	follows := make([]ChannelFollow, 0)
