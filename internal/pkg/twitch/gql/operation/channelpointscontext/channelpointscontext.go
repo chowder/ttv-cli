@@ -189,7 +189,9 @@ func Get(channelLogin string, authToken string) (ChannelPointsContext, error) {
 	}
 
 	var c ChannelPointsContext
-	err = json.Unmarshal(resp, &c)
+	if err := json.Unmarshal(resp, &c); err != nil {
+		return c, fmt.Errorf("error unmarshalling GQL response: %w", err)
+	}
 
 	return c, err
 }
