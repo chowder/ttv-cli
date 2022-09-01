@@ -23,7 +23,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          goversion: "https://go.dev/dl/go1.18.4.linux-amd64.tar.gz"
+          goversion: "https://go.dev/dl/go1.19.linux-amd64.tar.gz"
           project_path: "."
           binary_name: "ttv"
           ldflags: -X ttv-cli/cmd.buildVersion=${{ env.RELEASE_TAG }}
