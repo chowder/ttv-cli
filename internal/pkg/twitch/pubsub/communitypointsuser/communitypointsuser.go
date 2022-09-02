@@ -1,11 +1,13 @@
 package communitypointsuser
 
+// topic: community-points-user-v1
+
 import (
 	"encoding/json"
 	"time"
 )
 
-// PointsSpentData Use when message#Type is 'points-spent'
+// PointsSpentData Use when Response#Type is 'points-spent'
 type PointsSpentData struct {
 	Timestamp time.Time `json:"timestamp"`
 	Balance   struct {
@@ -15,7 +17,7 @@ type PointsSpentData struct {
 	} `json:"balance"`
 }
 
-// PointsEarnedData Use when message#Type is 'points-earned'
+// PointsEarnedData Use when Response#Type is 'points-earned'
 type PointsEarnedData struct {
 	Timestamp time.Time `json:"timestamp"`
 	ChannelId string    `json:"channel_id"`
@@ -37,15 +39,7 @@ type PointsEarnedData struct {
 	} `json:"balance"`
 }
 
-type Message struct {
+type Response struct {
 	Type string          `json:"type"`
 	Data json.RawMessage `json:"data"`
-}
-
-type Response struct {
-	Type string `json:"type"`
-	Data struct {
-		Topic   string `json:"topic"`
-		Message string `json:"message"`
-	} `json:"data"`
 }

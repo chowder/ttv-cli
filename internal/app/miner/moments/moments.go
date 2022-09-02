@@ -33,24 +33,12 @@ func MineMoments(c *pubsub.Client, streamerByIds map[string]string, authToken st
 			return
 		}
 
-		var message communitymomentschannel.Message
-		if err := json.Unmarshal([]byte(resp.Data.Message), &message); err != nil {
-			log.Printf("could not unmarshal response message: %s, error: %s\n", resp.Data.Message, err)
-			return
-		}
-
-		if message.Type == "active" {
-			log.Printf("Active moment received, data: %s\n", message.Data)
-			var data communitymomentschannel.ActiveMomentData
-			if err := json.Unmarshal(message.Data, &data); err != nil {
-				log.Printf("could not unmarshal response message data: %s, error: %s\n", message.Data, err)
-				return
-			}
-
-			log.Printf("Attempting to redeem moment ID: '%s'\n", data.MomentId)
-			err := communitymomentcalloutclaim.Claim(data.MomentId, authToken)
+		momentId := resp.Data.MomentId
+		if len(momentId) > 0 {
+			log.Printf("Attempting to redeem moment ID: '%s'\n", momentId)
+			err := communitymomentcalloutclaim.Claim(momentId, authToken)
 			if err != nil {
-				log.Printf("could not claim moment: %s, error: %s\n", data.MomentId, err)
+				log.Printf("could not claim moment: %s, error: %s\n", momentId, err)
 			}
 		}
 	}

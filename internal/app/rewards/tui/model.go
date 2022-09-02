@@ -1,25 +1,30 @@
 package tui
 
 import (
-	"context"
 	"fmt"
+	"github.com/Adeithe/go-twitch/pubsub"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"log"
 	"sort"
+	"ttv-cli/internal/pkg/config"
+	"ttv-cli/internal/pkg/twitch/gql/operation/channelpointscontext"
 	"ttv-cli/internal/pkg/twitch/gql/query/channel"
 	"ttv-cli/internal/pkg/twitch/pubsub/communitypointschannel"
+	"ttv-cli/internal/pkg/twitch/pubsub/communitypointsuser"
 )
 
 type Model struct {
 	twitchChannel        channel.Channel
-	authToken            string
+	config               config.Config
 	list                 list.Model
 	itemsById            map[string]*item
 	rewardsUpdateChannel chan communitypointschannel.Response
+	pointsUpdateChannel  chan communitypointsuser.Response
+	pubsubClient         *pubsub.Client
 }
 
-func NewModel(streamer string, authToken string) Model {
+func NewModel(pubsubClient *pubsub.Client, config config.Config, streamer string) Model {
 	c, err := channel.GetChannel(streamer)
 	if err != nil {
 		log.Fatalf("Failed to get channel information for '%s' - %s", streamer, err)
@@ -30,20 +35,31 @@ func NewModel(streamer string, authToken string) Model {
 
 	m := Model{
 		twitchChannel:        c,
-		authToken:            authToken,
+		config:               config,
 		list:                 list.New(make([]list.Item, 0), list.NewDefaultDelegate(), 0, 0),
 		itemsById:            make(map[string]*item),
 		rewardsUpdateChannel: make(chan communitypointschannel.Response),
+		pointsUpdateChannel:  make(chan communitypointsuser.Response),
 	}
 
-	m.list.Title = fmt.Sprintf("%s's Rewards", m.twitchChannel.DisplayName)
+	channelPointsContext, err := channelpointscontext.Get(c.Name, config.AuthToken)
+	if err != nil {
+		log.Fatalf("Could not fetch channel points context: %s", err)
+	}
+
+	balance := channelPointsContext.Data.Community.Channel.Self.CommunityPoints.Balance
+
+	m.list.Title = fmt.Sprintf("%s's Rewards (%d points)", m.twitchChannel.DisplayName, balance)
+
+	m.pubsubClient = pubsubClient
+
 	return m
 }
 
 func (m Model) Init() tea.Cmd {
-	ctx := context.Background() // TODO: Close this context on app exit
-	go m.subscribeToRewards(ctx)
-	return tea.Batch(m.getInitialRewards, m.tick())
+	go m.subscribeToRewards()
+	go m.subscribeToPoints()
+	return tea.Batch(m.getInitialRewards, m.processPointsUpdates, m.tick())
 }
 
 func (m Model) View() string {

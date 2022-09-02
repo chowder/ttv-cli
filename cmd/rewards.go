@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/Adeithe/go-twitch"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"log"
@@ -21,7 +22,11 @@ var rewardsCmd = &cobra.Command{
 		}
 
 		s := strings.ToLower(args[0])
-		m := tui.NewModel(s, c.AuthToken)
+
+		pc := twitch.PubSub()
+		defer pc.Close()
+
+		m := tui.NewModel(pc, c, s)
 
 		p := tea.NewProgram(m, tea.WithAltScreen())
 

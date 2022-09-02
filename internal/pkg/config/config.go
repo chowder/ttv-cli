@@ -3,14 +3,23 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"ttv-cli/internal/pkg/twitch/login"
 )
 
+type TokenDetails struct {
+	ClientId  string
+	Login     string
+	Scopes    []string
+	UserId    string
+	ExpiresIn int
+}
+
+// Config only stores the auth token - token details retrieved when the token is validated
 type Config struct {
-	AuthToken string `json:"auth_token"`
+	AuthToken    string `json:"auth_token"`
+	TokenDetails TokenDetails
 }
 
 func GetConfigFilePath() string {
@@ -21,8 +30,7 @@ func GetConfigFilePath() string {
 func createDefaultConfig() (Config, error) {
 	emptyConfig := Config{AuthToken: ""}
 
-	err := emptyConfig.validateAuthToken()
-	if err != nil {
+	if err := emptyConfig.validateAuthToken(); err != nil {
 		return Config{}, fmt.Errorf("createDefaultConfig: error when validating Twitch auth token: %w", err)
 	}
 
@@ -31,7 +39,7 @@ func createDefaultConfig() (Config, error) {
 
 func CreateOrRead() (Config, error) {
 	configFilePath := GetConfigFilePath()
-	contents, err := ioutil.ReadFile(configFilePath)
+	contents, err := os.ReadFile(configFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return createDefaultConfig()
@@ -44,31 +52,55 @@ func CreateOrRead() (Config, error) {
 		return Config{}, fmt.Errorf("CreateOrRead: Error when unmarshalling config file: %w", err)
 	}
 
-	if err = config.validateAuthToken(); err != nil {
+	if err := config.validateAuthToken(); err != nil {
 		return Config{}, fmt.Errorf("CreateOrRead: Error when validating Twitch auth token: %w", err)
 	}
 
 	return config, nil
 }
 
-func (c Config) validateAuthToken() error {
-	if len(c.AuthToken) == 0 || login.Validate(c.AuthToken) != nil {
-		fmt.Println("Auth token not found or expired, generating a new one for you...")
-
-		authToken, err := login.GetAccessToken("", "")
-		if err != nil {
-			return fmt.Errorf("validateAuthToken: Error getting Twitch access token: %w", err)
-		}
-
-		c.AuthToken = authToken
-		if err := c.Save(); err != nil {
-			return fmt.Errorf("validateAuthToken: Error saving config: %w", err)
-		}
+func (c *Config) refreshAuthToken() error {
+	authToken, err := login.GetAccessToken("", "")
+	if err != nil {
+		return fmt.Errorf("validateAuthToken: Error getting Twitch access token: %w", err)
 	}
+
+	c.AuthToken = authToken
+	if err := c.Save(); err != nil {
+		return fmt.Errorf("validateAuthToken: Error saving config: %w", err)
+	}
+
 	return nil
 }
 
-func (c Config) Save() error {
+func (c *Config) validateAuthToken() error {
+	if len(c.AuthToken) == 0 {
+		fmt.Println("Auth token not found, generating a new one for you...")
+		if err := c.refreshAuthToken(); err != nil {
+			return fmt.Errorf("could not refresh auth token: %w", err)
+		}
+	}
+
+	resp, err := login.Validate(c.AuthToken)
+	if err != nil {
+		fmt.Println("Auth token is stale or invalid, generating a new one for you...")
+		if err := c.refreshAuthToken(); err != nil {
+			return fmt.Errorf("could not refresh auth token: %w", err)
+		}
+	}
+
+	c.TokenDetails = TokenDetails{
+		ClientId:  resp.ClientId,
+		Login:     resp.Login,
+		Scopes:    resp.Scopes,
+		UserId:    resp.UserId,
+		ExpiresIn: resp.ExpiresIn,
+	}
+
+	return nil
+}
+
+func (c *Config) Save() error {
 	configFilePath := GetConfigFilePath()
 	contents, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
@@ -80,7 +112,7 @@ func (c Config) Save() error {
 		return fmt.Errorf("could not create config directory: %w", err)
 	}
 
-	if err := ioutil.WriteFile(configFilePath, contents, 0644); err != nil {
+	if err := os.WriteFile(configFilePath, contents, 0644); err != nil {
 		return fmt.Errorf("could not write to config file: %w", err)
 	}
 

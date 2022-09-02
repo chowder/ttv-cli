@@ -9,6 +9,7 @@ import (
 const getChannelQuery = `query Channel($name: String) {
 	channel(name: $name) {
 		id
+		name
 		displayName
 		communityPointsSettings {
 			customRewards {
@@ -45,6 +46,7 @@ type GetChannelResponse struct {
 
 type Channel struct {
 	Id                      string                         `json:"id"`
+	Name                    string                         `json:"name"`
 	DisplayName             string                         `json:"displayName"`
 	CommunityPointsSettings CommunityPointsChannelSettings `json:"communityPointsSettings"`
 }
