@@ -1,10 +1,20 @@
 package communitymomentschannel
 
-type Data struct {
+import "encoding/json"
+
+type ActiveMomentData struct {
 	MomentId string `json:"moment_id"`
+}
+
+type Message struct {
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
 }
 
 type Response struct {
 	Type string `json:"type"`
-	Data Data   `json:"data"`
+	Data struct {
+		Topic   string `json:"topic"`
+		Message string `json:"message"`
+	} `json:"data"`
 }

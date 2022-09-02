@@ -29,14 +29,28 @@ func MineMoments(c *pubsub.Client, streamerByIds map[string]string, authToken st
 
 		var resp communitymomentschannel.Response
 		if err := json.Unmarshal(data, &resp); err != nil {
-			log.Println(err)
+			log.Printf("could not unmarshal response: %s, error %s\n", string(data), err)
+			return
 		}
 
-		if len(resp.Data.MomentId) > 0 {
-			log.Printf("Attempting to redeem moment ID: '%s'\n", resp.Data.MomentId)
-			err := communitymomentcalloutclaim.Claim(resp.Data.MomentId, authToken)
+		var message communitymomentschannel.Message
+		if err := json.Unmarshal([]byte(resp.Data.Message), &message); err != nil {
+			log.Printf("could not unmarshal response message: %s, error: %s\n", resp.Data.Message, err)
+			return
+		}
+
+		if message.Type == "active" {
+			log.Printf("Active moment received, data: %s\n", message.Data)
+			var data communitymomentschannel.ActiveMomentData
+			if err := json.Unmarshal(message.Data, &data); err != nil {
+				log.Printf("could not unmarshal response message data: %s, error: %s\n", message.Data, err)
+				return
+			}
+
+			log.Printf("Attempting to redeem moment ID: '%s'\n", data.MomentId)
+			err := communitymomentcalloutclaim.Claim(data.MomentId, authToken)
 			if err != nil {
-				log.Println(err)
+				log.Printf("could not claim moment: %s, error: %s\n", data.MomentId, err)
 			}
 		}
 	}
