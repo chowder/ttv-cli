@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/fatih/color"
 	"log"
 	"time"
 	"ttv-cli/internal/pkg/twitch/gql/operation/redeemcustomreward"
@@ -15,7 +16,8 @@ import (
 type initialRewards []list.Item
 type updatedReward communitypointschannel.UpdatedReward
 type tick int
-type newBalance int
+type pointsBalance int
+type notification string
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -37,9 +39,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, m.processRewardUpdates
 
-	case newBalance:
+	case pointsBalance:
 		m.list.Title = fmt.Sprintf("%s's Rewards (%d points)", m.twitchChannel.DisplayName, msg)
 		return m, m.processPointsUpdates
+
+	case notification:
+		cmd := m.list.NewStatusMessage(string(msg))
+		return m, tea.Batch(cmd, m.processNotificationUpdates)
 
 	case tick:
 		cmd := m.list.SetItems(m.list.Items()) // Force re-render
@@ -54,8 +60,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, cmd
 			}
 			go m.redeemReward(selected)
-			cmd := m.list.NewStatusMessage(fmt.Sprintf("Redeeming '%s'", selected.Title_))
-			return m, cmd
 		}
 
 		if msg.String() == "ctrl+c" {
@@ -133,7 +137,12 @@ func (m Model) processRewardUpdates() tea.Msg {
 
 func (m Model) processPointsUpdates() tea.Msg {
 	update := <-m.pointsUpdateChannel
-	return newBalance(update.Balance.Balance)
+	return pointsBalance(update.Balance.Balance)
+}
+
+func (m Model) processNotificationUpdates() tea.Msg {
+	update := <-m.notificationsChannel
+	return notification(update)
 }
 
 func (m Model) tick() tea.Cmd {
@@ -155,8 +164,17 @@ func (m Model) redeemReward(i *item) {
 		input.TextInput = ":)" // FIXME
 	}
 
-	_, err := redeemcustomreward.Redeem(input, m.config.AuthToken)
+	response, err := redeemcustomreward.Redeem(input, m.config.AuthToken)
 	if err != nil {
 		fmt.Println("could not redeem reward: ", err)
+	}
+
+	respError := response.Data.RedeemCommunityPointsCustomReward.Error
+	if response.Data.RedeemCommunityPointsCustomReward.Error == nil {
+		m.notificationsChannel <- fmt.Sprintf("Redeemed '%s'", i.Title_)
+	} else {
+		style := color.New(color.BgMagenta).SprintfFunc()
+		msg := redeemcustomreward.ErrorToDisplay(respError.Code)
+		m.notificationsChannel <- style(" %s ", msg)
 	}
 }

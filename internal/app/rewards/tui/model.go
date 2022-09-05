@@ -21,6 +21,7 @@ type Model struct {
 	itemsById            map[string]*item
 	rewardsUpdateChannel chan communitypointschannel.Response
 	pointsUpdateChannel  chan communitypointsuser.PointsSpentData
+	notificationsChannel chan string
 	pubsubClient         *pubsub.Client
 }
 
@@ -40,6 +41,7 @@ func NewModel(pubsubClient *pubsub.Client, config config.Config, streamer string
 		itemsById:            make(map[string]*item),
 		rewardsUpdateChannel: make(chan communitypointschannel.Response, 8),
 		pointsUpdateChannel:  make(chan communitypointsuser.PointsSpentData, 8),
+		notificationsChannel: make(chan string, 8),
 	}
 
 	channelPointsContext, err := channelpointscontext.Get(c.Name, config.AuthToken)
@@ -59,7 +61,7 @@ func NewModel(pubsubClient *pubsub.Client, config config.Config, streamer string
 func (m Model) Init() tea.Cmd {
 	go m.subscribeToRewards()
 	go m.subscribeToPoints()
-	return tea.Batch(m.getInitialRewards, m.processPointsUpdates, m.tick())
+	return tea.Batch(m.getInitialRewards, m.processPointsUpdates, m.processNotificationUpdates, m.tick())
 }
 
 func (m Model) View() string {
