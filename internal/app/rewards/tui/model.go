@@ -20,7 +20,7 @@ type Model struct {
 	list                 list.Model
 	itemsById            map[string]*item
 	rewardsUpdateChannel chan communitypointschannel.Response
-	pointsUpdateChannel  chan communitypointsuser.Response
+	pointsUpdateChannel  chan communitypointsuser.PointsSpentData
 	pubsubClient         *pubsub.Client
 }
 
@@ -38,8 +38,8 @@ func NewModel(pubsubClient *pubsub.Client, config config.Config, streamer string
 		config:               config,
 		list:                 list.New(make([]list.Item, 0), list.NewDefaultDelegate(), 0, 0),
 		itemsById:            make(map[string]*item),
-		rewardsUpdateChannel: make(chan communitypointschannel.Response),
-		pointsUpdateChannel:  make(chan communitypointsuser.Response),
+		rewardsUpdateChannel: make(chan communitypointschannel.Response, 8),
+		pointsUpdateChannel:  make(chan communitypointsuser.PointsSpentData, 8),
 	}
 
 	channelPointsContext, err := channelpointscontext.Get(c.Name, config.AuthToken)

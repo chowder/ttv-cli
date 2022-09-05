@@ -8,6 +8,8 @@ import (
 )
 
 // PointsSpentData Use when Response#Type is 'points-spent'
+// Note - the structure for `PointsSpentData` is a subset of `PointsEarnedData`, and therefore can be used where only
+// the channel point balance is of interest
 type PointsSpentData struct {
 	Timestamp time.Time `json:"timestamp"`
 	Balance   struct {

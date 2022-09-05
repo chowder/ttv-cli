@@ -53,12 +53,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmd := m.list.NewStatusMessage("Out of stock!")
 				return m, cmd
 			}
-			err := m.redeemReward(selected)
-			if err != nil {
-				cmd := m.list.NewStatusMessage("Could not redeem!")
-				return m, cmd
-			}
-			cmd := m.list.NewStatusMessage(fmt.Sprintf("Redeemed '%s'", selected.Title_))
+			go m.redeemReward(selected)
+			cmd := m.list.NewStatusMessage(fmt.Sprintf("Redeeming '%s'", selected.Title_))
 			return m, cmd
 		}
 
@@ -89,7 +85,9 @@ func (m Model) subscribeToRewards() {
 			if err := json.Unmarshal(data, &response); err != nil {
 				log.Fatalln(err)
 			}
-			m.rewardsUpdateChannel <- response
+			if response.Type == "custom-reward-updated" {
+				m.rewardsUpdateChannel <- response
+			}
 		}
 	}
 
@@ -113,7 +111,14 @@ func (m Model) subscribeToPoints() {
 			}
 
 			if response.Type == "points-earned" || response.Type == "points-spent" {
-				m.pointsUpdateChannel <- response
+				var data communitypointsuser.PointsSpentData
+				if err := json.Unmarshal(response.Data, &data); err != nil {
+					log.Fatalf("Could not process point update: %s, error: %s\n", string(response.Data), err)
+				}
+
+				if data.Balance.ChannelId == m.twitchChannel.Id {
+					m.pointsUpdateChannel <- data
+				}
 			}
 		}
 	}
@@ -122,31 +127,13 @@ func (m Model) subscribeToPoints() {
 }
 
 func (m Model) processRewardUpdates() tea.Msg {
-	for update := range m.rewardsUpdateChannel {
-		if update.Type == "custom-reward-updated" {
-			return updatedReward(update.Data.UpdatedReward)
-		}
-	}
-	return nil // Unreachable
+	update := <-m.rewardsUpdateChannel
+	return updatedReward(update.Data.UpdatedReward)
 }
 
 func (m Model) processPointsUpdates() tea.Msg {
-	for update := range m.pointsUpdateChannel {
-		if update.Type == "points-spent" {
-			var data communitypointsuser.PointsSpentData
-			if err := json.Unmarshal(update.Data, &data); err != nil {
-				log.Fatalf("Could not process point update: %s, error: %s\n", update, err)
-			}
-			return newBalance(data.Balance.Balance)
-		} else if update.Type == "points-earned" {
-			var data communitypointsuser.PointsEarnedData
-			if err := json.Unmarshal(update.Data, &data); err != nil {
-				log.Fatalf("Could not process point update: %s, error: %s\n", update, err)
-			}
-			return newBalance(data.Balance.Balance)
-		}
-	}
-	return nil
+	update := <-m.pointsUpdateChannel
+	return newBalance(update.Balance.Balance)
 }
 
 func (m Model) tick() tea.Cmd {
@@ -155,8 +142,7 @@ func (m Model) tick() tea.Cmd {
 	})
 }
 
-func (m Model) redeemReward(i *item) error {
-
+func (m Model) redeemReward(i *item) {
 	input := redeemcustomreward.Input{
 		ChannelID: m.twitchChannel.Id,
 		Cost:      i.Cost,
@@ -171,8 +157,6 @@ func (m Model) redeemReward(i *item) error {
 
 	_, err := redeemcustomreward.Redeem(input, m.config.AuthToken)
 	if err != nil {
-		return fmt.Errorf("could not redeem reward: %w", err)
+		fmt.Println("could not redeem reward: ", err)
 	}
-
-	return nil
 }

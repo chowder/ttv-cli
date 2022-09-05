@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"ttv-cli/internal/pkg/twitch"
@@ -46,7 +45,7 @@ func post(request any, authToken string) ([]byte, error) {
 	}(httpResp.Body)
 
 	// Read the response body
-	body, err := ioutil.ReadAll(httpResp.Body)
+	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading HTTP response body: %w", err)
 	}

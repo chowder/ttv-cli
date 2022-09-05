@@ -5,6 +5,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"log"
+	"os"
+	"path"
 	"strings"
 	"ttv-cli/internal/app/rewards/tui"
 	"ttv-cli/internal/pkg/config"
@@ -18,7 +20,17 @@ var rewardsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c, err := config.CreateOrRead()
 		if err != nil {
-			log.Fatalf("Error reading config: %s\n", err)
+			log.Fatalln("Error reading config: ", err)
+		}
+
+		if loggingEnabled {
+			f, err := tea.LogToFile(path.Join(os.TempDir(), "ttv-rewards.log"), "")
+			if err != nil {
+				log.Fatalln(err)
+			}
+			defer f.Close()
+
+			log.Println("Logging enabled")
 		}
 
 		s := strings.ToLower(args[0])
@@ -36,6 +48,9 @@ var rewardsCmd = &cobra.Command{
 	},
 }
 
+var loggingEnabled bool
+
 func init() {
 	rootCmd.AddCommand(rewardsCmd)
+	rewardsCmd.Flags().BoolVarP(&loggingEnabled, "debug", "d", false, "Enables logging")
 }
