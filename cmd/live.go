@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
+	"math"
+	"ttv-cli/internal/app/live"
 	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelfollows"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
-	"ttv-cli/internal/pkg/utils"
 )
 
 var liveCmd = &cobra.Command{
@@ -50,14 +51,24 @@ var liveCmd = &cobra.Command{
 			}
 		}
 
+		width := 0
+		for _, user := range online {
+			width = int(math.Max(float64(width), float64(len(user.DisplayName))))
+		}
+		if showOffline {
+			for _, user := range offline {
+				width = int(math.Max(float64(width), float64(len(user.DisplayName))))
+			}
+		}
+
 		// Display online streamers first, then offline ones
 		for _, user := range online {
-			utils.DisplayUserLive(user)
+			live.DisplayUserLive(user, width)
 		}
 
 		if showOffline {
 			for _, user := range offline {
-				utils.DisplayUserOffline(user)
+				live.DisplayUserOffline(user, width)
 			}
 		}
 	},
@@ -67,5 +78,5 @@ var showOffline bool
 
 func init() {
 	rootCmd.AddCommand(liveCmd)
-	showOffline = *liveCmd.Flags().BoolP("show-offline", "a", false, "Toggle to display streamers who are offline")
+	liveCmd.Flags().BoolVarP(&showOffline, "show-offline", "a", false, "Toggle to display streamers who are offline")
 }
