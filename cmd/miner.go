@@ -6,7 +6,7 @@ import (
 	"github.com/Adeithe/go-twitch"
 	"github.com/spf13/cobra"
 	"log"
-	"ttv-cli/internal/app/miner/moments"
+	"ttv-cli/internal/app/miner"
 	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
 )
@@ -46,7 +46,7 @@ func run(ctx context.Context, names []string) {
 		streamerByIds[u.Id] = u.DisplayName
 	}
 
-	err = moments.MineMoments(p, streamerByIds, cfg.AuthToken)
+	err = miner.MineMoments(p, streamerByIds, cfg.AuthToken)
 	if err != nil {
 		log.Fatalf("Could not subscribe to Moments - %s\n", err)
 	}

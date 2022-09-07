@@ -10,8 +10,6 @@ import (
 	"ttv-cli/internal/pkg/twitch"
 )
 
-const defaultUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36"
-
 func post(request any, authToken string) ([]byte, error) {
 	// Make request body
 	requestBody, err := json.Marshal(request)
@@ -20,12 +18,12 @@ func post(request any, authToken string) ([]byte, error) {
 	}
 
 	// Make a POST request
-	req, err := http.NewRequest("POST", twitch.GqlApiUrl, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest(http.MethodPost, twitch.GqlApiUrl, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Set("Client-ID", twitch.DefaultClientId)
-	req.Header.Set("User-Agent", defaultUserAgent)
+	req.Header.Set("User-Agent", twitch.DefaultUserAgent)
 	if len(authToken) > 0 {
 		req.Header.Set("Authorization", "OAuth "+authToken)
 	}

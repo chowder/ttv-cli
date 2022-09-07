@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"ttv-cli/internal/pkg/twitch/login"
+	"ttv-cli/internal/pkg/twitch/auth"
 )
 
 type TokenDetails struct {
@@ -60,7 +60,7 @@ func CreateOrRead() (Config, error) {
 }
 
 func (c *Config) refreshAuthToken() error {
-	authToken, err := login.GetAccessToken("", "")
+	authToken, err := auth.GetAccessToken("", "")
 	if err != nil {
 		return fmt.Errorf("validateAuthToken: Error getting Twitch access token: %w", err)
 	}
@@ -81,7 +81,7 @@ func (c *Config) validateAuthToken() error {
 		}
 	}
 
-	resp, err := login.Validate(c.AuthToken)
+	resp, err := auth.Validate(c.AuthToken)
 	if err != nil {
 		fmt.Println("Auth token is stale or invalid, generating a new one for you...")
 		if err := c.refreshAuthToken(); err != nil {

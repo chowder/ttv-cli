@@ -37,7 +37,7 @@ type request struct {
 }
 
 func makeRequest(input Input) (request, error) {
-	token, err := display.TokenHex(16)
+	token, err := utils.TokenHex(16)
 	if err != nil {
 		return request{}, fmt.Errorf("could not generate transaction ID: %w", err)
 	}

@@ -1,4 +1,4 @@
-package moments
+package miner
 
 import (
 	"encoding/json"
