@@ -3,7 +3,6 @@ package live
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"log"
 	"time"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
 )
@@ -28,12 +27,7 @@ func DisplayUserLive(user users.User, width int) {
 	streamer := fmt.Sprintf("%-*s", width, user.DisplayName)
 	directory := user.Stream.Game.DisplayName
 
-	startTime, err := time.Parse(time.RFC3339, user.Stream.CreatedAt)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	duration := time.Since(startTime)
+	duration := time.Since(user.Stream.CreatedAt)
 	duration = duration.Truncate(time.Second)
 
 	fmt.Println("  \u2022", green(streamer), ":", green(directory), yellow("(", FmtDuration(duration), ")"))

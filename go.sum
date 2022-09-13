@@ -1,5 +1,7 @@
 github.com/Adeithe/go-twitch v0.1.1 h1:oqdMJR8/yhOgUwJ2Q5vOoAoXJQI7Vy+S2nyuruLSV8o=
 github.com/Adeithe/go-twitch v0.1.1/go.mod h1:prRQ2xlTM0BVcQYx+WGK7GO0jw2uGOWCHGUCJIg1910=
+github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef h1:2JGTg6JapxP9/R33ZaagQtAM4EkkSYnIAlOG5EI8gkM=
+github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef/go.mod h1:JS7hed4L1fj0hXcyEejnW57/7LCetXggd+vwrRnYeII=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/charmbracelet/bubbles v0.13.0 h1:zP/ROH3wJEBqZWKIsD50ZKKlx3ydLInq3LdD/Nrlb8w=

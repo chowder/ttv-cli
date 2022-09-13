@@ -3,6 +3,8 @@ package communitymomentschannel
 type Response struct {
 	Type string `json:"type"`
 	Data struct {
-		MomentId string `json:"moment_id"`
+		MomentId  string `json:"moment_id"`
+		ChannelId string `json:"channel_id"`
+		ClipSlug  string `json:"clip_slug"`
 	} `json:"data"`
 }

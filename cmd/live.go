@@ -44,7 +44,7 @@ var liveCmd = &cobra.Command{
 			if len(user.Id) == 0 {
 				fmt.Printf("Could not find channel information for '%s'\n", s[i])
 				continue
-			} else if user.Stream.CreatedAt != "" {
+			} else if user.Stream != nil && !user.Stream.CreatedAt.IsZero() {
 				online = append(online, user)
 			} else {
 				offline = append(offline, user)

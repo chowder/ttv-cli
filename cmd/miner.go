@@ -1,61 +1,27 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"github.com/Adeithe/go-twitch"
 	"github.com/spf13/cobra"
 	"log"
 	"ttv-cli/internal/app/miner"
 	"ttv-cli/internal/pkg/config"
-	"ttv-cli/internal/pkg/twitch/gql/query/users"
 )
 
 var minerCmd = &cobra.Command{
 	Use:   "miner",
 	Short: "Mines channel points, moments, and drops",
-	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		run(context.Background(), args)
+		run()
 	},
 }
 
-func run(ctx context.Context, names []string) {
-	cfg, err := config.CreateOrRead()
+func run() {
+	c, err := config.CreateOrRead()
 	if err != nil {
-		log.Fatalf("Error reading config: %s\n", err)
+		log.Fatalln("could not read config file: ", err)
 	}
-
-	p := twitch.PubSub()
-
-	p.OnShardConnect(func(shard int) {
-		fmt.Printf("Shard #%d connected!\n", shard)
-	})
-
-	streamerByIds := make(map[string]string, 0)
-	us, err := users.GetUsers(names)
-	if err != nil {
-		log.Fatalf("Could not fetch channel information for users - %s\n", err)
-	}
-
-	for i, u := range us {
-		if len(u.Id) == 0 {
-			log.Printf("Could not find user with name '%s'\n", names[i])
-			continue
-		}
-		streamerByIds[u.Id] = u.DisplayName
-	}
-
-	err = miner.MineMoments(p, streamerByIds, cfg.AuthToken)
-	if err != nil {
-		log.Fatalf("Could not subscribe to Moments - %s\n", err)
-	}
-
-	defer p.Close()
-
-	fmt.Printf("Started listening to %d topics on %d shards\n", p.GetNumTopics(), p.GetNumShards())
-
-	<-ctx.Done()
+	m := miner.New(c.AuthToken)
+	m.Start()
 }
 
 func init() {

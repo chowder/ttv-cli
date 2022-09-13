@@ -3,6 +3,7 @@ package users
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
@@ -31,18 +32,20 @@ type request struct {
 	Variables variables `json:"variables"`
 }
 
+type Stream struct {
+	Game struct {
+		DisplayName string `json:"displayName"`
+	}
+	CreatedAt    time.Time `json:"createdAt"`
+	ViewersCount int       `json:"viewersCount"`
+}
+
 type User struct {
-	DisplayName string `json:"displayName"`
-	Id          string `json:"id"`
-	Login       string `json:"login"`
-	ProfileURL  string `json:"profileURL"`
-	Stream      struct {
-		Game struct {
-			DisplayName string `json:"displayName"`
-		}
-		CreatedAt    string `json:"createdAt"`
-		ViewersCount int    `json:"viewersCount"`
-	} `json:"stream"`
+	DisplayName string  `json:"displayName"`
+	Id          string  `json:"id"`
+	Login       string  `json:"login"`
+	ProfileURL  string  `json:"profileURL"`
+	Stream      *Stream `json:"stream"`
 }
 
 type Response struct {
