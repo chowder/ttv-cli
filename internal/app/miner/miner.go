@@ -14,12 +14,13 @@ import (
 
 type Miner struct {
 	AuthToken    string
+	UserId       string
 	channels     []channelfollows.ChannelFollow
 	pubsubClient *pubsub.Client
 	eventBus     EventBus.Bus
 }
 
-func New(authToken string) Miner {
+func New(authToken string, userId string) Miner {
 	channels, err := channelfollows.Get(authToken)
 	if err != nil {
 		log.Fatalln("Unable to get followed channels: ", err)
@@ -27,6 +28,7 @@ func New(authToken string) Miner {
 
 	return Miner{
 		AuthToken:    authToken,
+		UserId:       userId,
 		pubsubClient: twitch.PubSub(),
 		channels:     channels,
 		eventBus:     EventBus.New(),
@@ -38,13 +40,8 @@ func (m Miner) Start() {
 	signal.Notify(exitChannel, os.Interrupt, syscall.SIGTERM)
 	ctx, cancel := context.WithCancel(context.Background())
 
-	if err := m.subscribeStreamStart(ctx); err != nil {
+	if err := m.subscribeStreamStatus(ctx); err != nil {
 		log.Println("could not subscribe to stream start events: ", err)
-		goto exit
-	}
-
-	if err := m.listenStreamStart(ctx); err != nil {
-		log.Println("could not listen to stream start events: ", err)
 		goto exit
 	}
 
@@ -53,8 +50,8 @@ func (m Miner) Start() {
 		goto exit
 	}
 
-	if err := m.listenMoments(ctx); err != nil {
-		log.Println("could not listen to Moments events: ", err)
+	if err := m.subscribePoints(ctx); err != nil {
+		log.Println("could not subscribe to points update events: ", err)
 		goto exit
 	}
 

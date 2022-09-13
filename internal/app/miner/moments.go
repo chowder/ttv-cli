@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Adeithe/go-twitch/pubsub"
+	"github.com/asaskevich/EventBus"
 	"log"
 	"strings"
 	"time"
@@ -11,18 +13,38 @@ import (
 	"ttv-cli/internal/pkg/twitch/gql/operation/communitymomentcalloutclaim"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
 	"ttv-cli/internal/pkg/twitch/pubsub/communitymomentschannel"
+	"ttv-cli/internal/pkg/utils"
 )
-
-const momentsTopic = "moment"
 
 type Moment communitymomentschannel.Response
 
-func (m Miner) listenMoments(ctx context.Context) error {
+func (m Miner) subscribeMoments(ctx context.Context) error {
+	log.Println("Subscribing to moments...")
+
+	c, err := getMomentsChannel(m.pubsubClient, m.AuthToken)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for moment := range c {
+			m.eventBus.Publish(momentsTopic, moment)
+		}
+	}()
+
+	if err := registerMomentsHandlers(ctx, m.AuthToken, m.eventBus); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func registerMomentsHandlers(ctx context.Context, authToken string, eventBus EventBus.Bus) error {
 	handler := func(moment Moment) {
 		momentId := moment.Data.MomentId
 		if len(momentId) > 0 {
 			log.Printf("Attempting to redeem moment ID: '%s'\n", momentId)
-			err := communitymomentcalloutclaim.Claim(momentId, m.AuthToken)
+			err := communitymomentcalloutclaim.Claim(momentId, authToken)
 			if err != nil {
 				log.Printf("could not claim moment: %s, error: %s\n", momentId, err)
 			}
@@ -31,47 +53,28 @@ func (m Miner) listenMoments(ctx context.Context) error {
 
 	go func() {
 		<-ctx.Done()
-		_ = m.eventBus.Unsubscribe(momentsTopic, handler)
+		_ = eventBus.Unsubscribe(momentsTopic, handler)
 	}()
 
-	return m.eventBus.Subscribe(momentsTopic, handler)
+	return eventBus.Subscribe(momentsTopic, handler)
 }
 
-func (m Miner) subscribeMoments(ctx context.Context) error {
-	c, err := m.getMomentsChannel(ctx)
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for {
-			select {
-			case moment := <-c:
-				m.eventBus.Publish(momentsTopic, moment)
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	return nil
-}
-
-func (m Miner) getMomentsChannel(ctx context.Context) (<-chan Moment, error) {
-	followsById, err := m.getFollowsById()
+func getMomentsChannel(client *pubsub.Client, authToken string) (<-chan Moment, error) {
+	followsById, err := getFollowsById(authToken)
 	if err != nil {
 		return nil, err
 	}
 
 	const topic = "community-moments-channel-v1"
 
+	success := make([]string, 0)
 	for id, name := range followsById {
-		log.Printf("Listening to topic: '%s' for streamer: '%s' (%s)\n", topic, name, id)
-		if err := m.pubsubClient.ListenWithAuth(m.AuthToken, topic, id); err != nil {
+		if err := client.ListenWithAuth(authToken, topic, id); err != nil {
 			msg := fmt.Sprintf("Failed to listen to topic: '%s' for streamer: '%s' (%s) - %v", topic, name, id, err)
 			log.Println(msg)
 		}
-		time.Sleep(time.Second) // TODO: Add jitter
+		success = append(success, name)
+		time.Sleep(utils.GetRandomDuration(1, 2))
 	}
 
 	c := make(chan Moment)
@@ -88,13 +91,15 @@ func (m Miner) getMomentsChannel(ctx context.Context) (<-chan Moment, error) {
 		}
 	}
 
-	m.pubsubClient.OnShardMessage(handleUpdate)
+	client.OnShardMessage(handleUpdate)
+
+	log.Printf("Mining Moments for users: %v\n", success)
 
 	return c, nil
 }
 
-func (m Miner) getFollowsById() (map[string]string, error) {
-	follows, err := channelfollows.Get(m.AuthToken)
+func getFollowsById(authToken string) (map[string]string, error) {
+	follows, err := channelfollows.Get(authToken)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +116,7 @@ func (m Miner) getFollowsById() (map[string]string, error) {
 
 	followsByIds := make(map[string]string)
 	for _, userInfo := range userInfos {
-		followsByIds[userInfo.Id] = userInfo.DisplayName
+		followsByIds[userInfo.Id] = userInfo.Login
 	}
 
 	return followsByIds, nil

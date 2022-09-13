@@ -3,65 +3,86 @@ package miner
 import (
 	"context"
 	"fmt"
+	"github.com/asaskevich/EventBus"
+	"golang.org/x/exp/slices"
 	"log"
 	"time"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelfollows"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
+	"ttv-cli/internal/pkg/utils"
 )
 
-const streamStartTopic = "stream_start"
-
-func (m Miner) listenStreamStart(ctx context.Context) error {
-	log.Println("listening to stream start events...")
-
-	handler := func(name string) {
-		log.Println("Streamer came online: ", name)
-	}
-
-	go func() {
-		<-ctx.Done()
-		_ = m.eventBus.Unsubscribe(streamStartTopic, handler)
-	}()
-
-	return m.eventBus.Subscribe(streamStartTopic, handler)
+type StreamDetails struct {
+	login  string
+	stream *users.Stream
 }
 
-func (m Miner) subscribeStreamStart(ctx context.Context) error {
-	log.Println("subscribing to stream start events...")
+func (m Miner) subscribeStreamStatus(ctx context.Context) error {
+	log.Println("Subscribing to stream start events...")
 
 	c, err := getStreamStartChannel(ctx, m.AuthToken)
 	if err != nil {
 		return fmt.Errorf("could not create stream start channel: %w", err)
 	}
 
+	activeStreamers := make([]string, 0)
+
 	go func() {
-		for {
-			select {
-			case stream := <-c:
-				m.eventBus.Publish(streamStartTopic, stream.DisplayName)
-			case <-ctx.Done():
-				return
+		for details := range c {
+			if details.stream == nil && slices.Contains(activeStreamers, details.login) {
+				m.eventBus.Publish(streamEndTopic, details)
+				activeStreamers = utils.Remove(activeStreamers, details.login)
+			} else if details.stream != nil && !slices.Contains(activeStreamers, details.login) {
+				m.eventBus.Publish(streamStartTopic, details)
+				activeStreamers = append(activeStreamers, details.login)
 			}
 		}
+	}()
+
+	if err := registerStreamStartHandlers(ctx, m.eventBus); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func registerStreamStartHandlers(ctx context.Context, eventBus EventBus.Bus) error {
+	streamStartHandler := func(stream StreamDetails) {
+		log.Println("Streamer came online: ", stream.login)
+	}
+
+	streamEndHandler := func(stream StreamDetails) {
+		log.Println("Streamer went offline: ", stream.login)
+	}
+
+	if err := eventBus.Subscribe(streamStartTopic, streamStartHandler); err != nil {
+		return err
+	}
+	if err := eventBus.Subscribe(streamEndTopic, streamEndHandler); err != nil {
+		return err
+	}
+
+	go func() {
+		<-ctx.Done()
+		_ = eventBus.Unsubscribe(streamStartTopic, streamStartHandler)
+		_ = eventBus.Unsubscribe(streamEndTopic, streamEndHandler)
 	}()
 
 	return nil
 }
 
-func getStreamStartChannel(ctx context.Context, authToken string) (<-chan users.User, error) {
+func getStreamStartChannel(ctx context.Context, authToken string) (<-chan StreamDetails, error) {
 	follows, err := channelfollows.Get(authToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followed channels: %w", err)
 	}
 
-	streamStartTimesByLogins := make(map[string]time.Time)
 	logins := make([]string, len(follows))
 	for i, f := range follows {
-		streamStartTimesByLogins[f.Login] = time.Time{}
 		logins[i] = f.Login
 	}
 
-	c := make(chan users.User)
+	c := make(chan StreamDetails)
 
 	go func() {
 		for {
@@ -75,10 +96,9 @@ func getStreamStartChannel(ctx context.Context, authToken string) (<-chan users.
 					log.Println("could not get updates: ", err)
 				}
 				for _, user := range us {
-					previousStreamStartTime := streamStartTimesByLogins[user.Login]
-					if user.Stream != nil && !user.Stream.CreatedAt.Equal(previousStreamStartTime) {
-						c <- user
-						streamStartTimesByLogins[user.Login] = user.Stream.CreatedAt
+					c <- StreamDetails{
+						login:  user.Login,
+						stream: user.Stream,
 					}
 				}
 			}

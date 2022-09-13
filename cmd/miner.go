@@ -20,7 +20,7 @@ func run() {
 	if err != nil {
 		log.Fatalln("could not read config file: ", err)
 	}
-	m := miner.New(c.AuthToken)
+	m := miner.New(c.AuthToken, c.TokenDetails.UserId)
 	m.Start()
 }
 
