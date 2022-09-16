@@ -7,7 +7,7 @@ import (
 	"golang.org/x/exp/slices"
 	"log"
 	"time"
-	twitch2 "ttv-cli/internal/pkg/twitch"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelfollows"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
 	"ttv-cli/internal/pkg/utils"
@@ -72,8 +72,8 @@ func registerStreamStartHandlers(ctx context.Context, eventBus EventBus.Bus) err
 	return nil
 }
 
-func getStreamStartChannel(client *twitch2.Client, ctx context.Context) (<-chan StreamDetails, error) {
-	follows, err := channelfollows.Get(client)
+func getStreamStartChannel(config *config.Config, ctx context.Context) (<-chan StreamDetails, error) {
+	follows, err := channelfollows.Get(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followed channels: %w", err)
 	}

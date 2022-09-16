@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sync"
 	"ttv-cli/internal/pkg/twitch/auth"
 )
 
@@ -16,10 +17,27 @@ type TokenDetails struct {
 	ExpiresIn int
 }
 
-// Config only stores the auth token - token details retrieved when the token is validated
 type Config struct {
-	AuthToken    string `json:"auth_token"`
-	TokenDetails TokenDetails
+	authToken    string
+	tokenDetails *TokenDetails
+	deviceId     string
+	integrity    *integrity
+	mutex        sync.Mutex
+}
+
+type configJson struct {
+	AuthToken string `json:"auth_token"`
+	DeviceId  string `json:"device_id"`
+}
+
+func FromToken(authToken string) *Config {
+	return &Config{
+		authToken:    authToken,
+		tokenDetails: nil,
+		deviceId:     createRandomDeviceId(),
+		integrity:    nil,
+		mutex:        sync.Mutex{},
+	}
 }
 
 func GetConfigFilePath() string {
@@ -27,80 +45,56 @@ func GetConfigFilePath() string {
 	return path.Join(home, "ttv-cli", "ttv-cli.config")
 }
 
-func createDefaultConfig() (Config, error) {
-	emptyConfig := Config{AuthToken: ""}
-
-	if err := emptyConfig.validateAuthToken(); err != nil {
-		return Config{}, fmt.Errorf("createDefaultConfig: error when validating Twitch auth token: %w", err)
-	}
-
-	return emptyConfig, nil
-}
-
-func CreateOrRead() (Config, error) {
+func CreateOrRead() (*Config, error) {
 	configFilePath := GetConfigFilePath()
 	contents, err := os.ReadFile(configFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return createDefaultConfig()
+			authToken, err := auth.GetAccessToken("", "")
+			if err != nil {
+				return nil, fmt.Errorf("error getting Twitch auth token: %w", err)
+			}
+			c := FromToken(authToken)
+			err = c.Save()
+			if err != nil {
+				return nil, fmt.Errorf("error saving Twitch auth token: %w", err)
+			}
+			return c, nil
 		}
-		return Config{}, fmt.Errorf("CreateOrRead: error when reading config file: %w", err)
+		return nil, fmt.Errorf("CreateOrRead: error when reading config file: %w", err)
 	}
 
-	var config Config
-	if err = json.Unmarshal(contents, &config); err != nil {
-		return Config{}, fmt.Errorf("CreateOrRead: Error when unmarshalling config file: %w", err)
+	var configJson configJson
+	if err = json.Unmarshal(contents, &configJson); err != nil {
+		return nil, fmt.Errorf("error when unmarshalling config file: %w", err)
 	}
 
-	if err := config.validateAuthToken(); err != nil {
-		return Config{}, fmt.Errorf("CreateOrRead: Error when validating Twitch auth token: %w", err)
+	c := configJson.ToConfig()
+	if err := c.validateAuthToken(); err != nil {
+		return nil, fmt.Errorf("error when validating Twitch auth token: %w", err)
 	}
 
-	return config, nil
+	return c, nil
 }
 
-func (c *Config) refreshAuthToken() error {
-	authToken, err := auth.GetAccessToken("", "")
-	if err != nil {
-		return fmt.Errorf("validateAuthToken: Error getting Twitch access token: %w", err)
+func (c configJson) ToConfig() *Config {
+	if len(c.DeviceId) == 0 {
+		c.DeviceId = createRandomDeviceId()
 	}
 
-	c.AuthToken = authToken
-	if err := c.Save(); err != nil {
-		return fmt.Errorf("validateAuthToken: Error saving config: %w", err)
+	return &Config{
+		authToken:    c.AuthToken,
+		tokenDetails: nil,
+		deviceId:     c.DeviceId,
+		integrity:    nil,
+		mutex:        sync.Mutex{},
 	}
-
-	return nil
-}
-
-func (c *Config) validateAuthToken() error {
-	if len(c.AuthToken) == 0 {
-		fmt.Println("Auth token not found, generating a new one for you...")
-		if err := c.refreshAuthToken(); err != nil {
-			return fmt.Errorf("could not refresh auth token: %w", err)
-		}
-	}
-
-	resp, err := auth.Validate(c.AuthToken)
-	if err != nil {
-		fmt.Println("Auth token is stale or invalid, generating a new one for you...")
-		if err := c.refreshAuthToken(); err != nil {
-			return fmt.Errorf("could not refresh auth token: %w", err)
-		}
-	}
-
-	c.TokenDetails = TokenDetails{
-		ClientId:  resp.ClientId,
-		Login:     resp.Login,
-		Scopes:    resp.Scopes,
-		UserId:    resp.UserId,
-		ExpiresIn: resp.ExpiresIn,
-	}
-
-	return nil
 }
 
 func (c *Config) Save() error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	configFilePath := GetConfigFilePath()
 	contents, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
@@ -117,4 +111,12 @@ func (c *Config) Save() error {
 	}
 
 	return nil
+}
+
+func (c *Config) GetAuthToken() string {
+	return c.authToken
+}
+
+func (c *Config) GetDeviceId() string {
+	return c.deviceId
 }

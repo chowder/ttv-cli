@@ -3,7 +3,7 @@ package communitymomentcalloutclaim
 import (
 	"fmt"
 	"log"
-	"ttv-cli/internal/pkg/twitch"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
@@ -47,9 +47,9 @@ func makeRequest(momentId string) request {
 	}
 }
 
-func Claim(client *twitch.Client, momentId string) error {
+func Claim(c *config.Config, momentId string) error {
 	req := makeRequest(momentId)
-	resp, err := gql.PostWithAuth(client, req)
+	resp, err := gql.PostWithAuth(c, req)
 	if err != nil {
 		return fmt.Errorf("error with GQL request: %w", err)
 	}

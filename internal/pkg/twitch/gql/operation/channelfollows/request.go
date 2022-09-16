@@ -3,7 +3,7 @@ package channelfollows
 import (
 	"encoding/json"
 	"fmt"
-	"ttv-cli/internal/pkg/twitch"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
@@ -49,9 +49,9 @@ type ChannelFollow struct {
 }
 
 // Get TODO: Implement cursor following to handle >100 follows
-func Get(client *twitch.Client) ([]ChannelFollow, error) {
+func Get(c *config.Config) ([]ChannelFollow, error) {
 	req := makeRequest()
-	respBody, err := gql.PostWithAuth(client, req)
+	respBody, err := gql.PostWithAuth(c, req)
 	if err != nil {
 		return nil, fmt.Errorf("error with GQL request: %w", err)
 	}

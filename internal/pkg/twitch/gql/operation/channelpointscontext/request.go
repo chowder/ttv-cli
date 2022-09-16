@@ -3,7 +3,7 @@ package channelpointscontext
 import (
 	"encoding/json"
 	"fmt"
-	"ttv-cli/internal/pkg/twitch"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
@@ -41,17 +41,17 @@ func makeRequest(channelLogin string) request {
 	}
 }
 
-func Get(client *twitch.Client, channelLogin string) (Response, error) {
+func Get(c *config.Config, channelLogin string) (Response, error) {
 	req := makeRequest(channelLogin)
-	resp, err := gql.PostWithAuth(client, req)
+	resp, err := gql.PostWithAuth(c, req)
 	if err != nil {
 		return Response{}, fmt.Errorf("error with GQL request: %w", err)
 	}
 
-	var c Response
-	if err := json.Unmarshal(resp, &c); err != nil {
-		return c, fmt.Errorf("error unmarshalling GQL response: %w", err)
+	var r Response
+	if err := json.Unmarshal(resp, &r); err != nil {
+		return r, fmt.Errorf("error unmarshalling GQL response: %w", err)
 	}
 
-	return c, err
+	return r, err
 }

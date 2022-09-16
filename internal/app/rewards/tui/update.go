@@ -99,9 +99,13 @@ func (m Model) subscribeToRewards() {
 }
 
 func (m Model) subscribeToPoints() {
-	userId := m.config.TokenDetails.UserId
+	details, err := m.config.GetTokenDetails()
+	if err != nil {
+		log.Fatalf("Could not get auth token details: %s\n", err)
+	}
 
-	err := m.pubsubClient.ListenWithAuth(m.config.AuthToken, "community-points-user-v1", userId)
+	userId := details.UserId
+	err = m.pubsubClient.ListenWithAuth(m.config.GetAuthToken(), "community-points-user-v1", userId)
 	if err != nil {
 		log.Fatalf("Could not subscribe to community-points-user-v1.%s: %s\n", m.twitchChannel.Id, err)
 	}
@@ -164,7 +168,7 @@ func (m Model) redeemReward(i *item) {
 		input.TextInput = ":)" // FIXME
 	}
 
-	response, err := redeemcustomreward.Redeem(m.client, input)
+	response, err := redeemcustomreward.Redeem(m.config, input)
 	if err != nil {
 		fmt.Println("could not redeem reward: ", err)
 	}

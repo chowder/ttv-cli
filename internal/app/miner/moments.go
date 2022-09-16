@@ -9,7 +9,7 @@ import (
 	"log"
 	"strings"
 	"time"
-	twitch2 "ttv-cli/internal/pkg/twitch"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelfollows"
 	"ttv-cli/internal/pkg/twitch/gql/operation/communitymomentcalloutclaim"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
@@ -40,12 +40,12 @@ func (m Miner) subscribeMoments(ctx context.Context) error {
 	return nil
 }
 
-func registerMomentsHandlers(client *twitch2.Client, ctx context.Context, eventBus EventBus.Bus) error {
+func registerMomentsHandlers(config *config.Config, ctx context.Context, eventBus EventBus.Bus) error {
 	handler := func(moment Moment) {
 		momentId := moment.Data.MomentId
 		if len(momentId) > 0 {
 			log.Printf("Attempting to redeem moment ID: '%s'\n", momentId)
-			err := communitymomentcalloutclaim.Claim(client, momentId)
+			err := communitymomentcalloutclaim.Claim(config, momentId)
 			if err != nil {
 				log.Printf("could not claim moment: %s, error: %s\n", momentId, err)
 			}
@@ -60,8 +60,8 @@ func registerMomentsHandlers(client *twitch2.Client, ctx context.Context, eventB
 	return eventBus.Subscribe(momentsTopic, handler)
 }
 
-func getMomentsChannel(client *twitch2.Client, pubsubClient *pubsub.Client) (<-chan Moment, error) {
-	followsById, err := getFollowsById(client)
+func getMomentsChannel(config *config.Config, pubsubClient *pubsub.Client) (<-chan Moment, error) {
+	followsById, err := getFollowsById(config)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func getMomentsChannel(client *twitch2.Client, pubsubClient *pubsub.Client) (<-c
 
 	success := make([]string, 0)
 	for id, name := range followsById {
-		if err := pubsubClient.ListenWithAuth(client.GetAuthToken(), topic, id); err != nil {
+		if err := pubsubClient.ListenWithAuth(config.GetAuthToken(), topic, id); err != nil {
 			msg := fmt.Sprintf("Failed to listen to topic: '%s' for streamer: '%s' (%s) - %v", topic, name, id, err)
 			log.Println(msg)
 		}
@@ -99,8 +99,8 @@ func getMomentsChannel(client *twitch2.Client, pubsubClient *pubsub.Client) (<-c
 	return c, nil
 }
 
-func getFollowsById(client *twitch2.Client) (map[string]string, error) {
-	follows, err := channelfollows.Get(client)
+func getFollowsById(config *config.Config) (map[string]string, error) {
+	follows, err := channelfollows.Get(config)
 	if err != nil {
 		return nil, err
 	}

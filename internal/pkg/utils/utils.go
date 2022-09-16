@@ -7,9 +7,14 @@ import (
 	"time"
 )
 
+var (
+	source = rand.NewSource(time.Now().UnixNano())
+)
+
 func TokenHex(length int) (string, error) {
 	b := make([]byte, length)
-	_, err := rand.Read(b)
+	r := rand.New(source)
+	_, err := r.Read(b)
 	if err != nil {
 		return "", fmt.Errorf("error reading random token: %w", err)
 	}

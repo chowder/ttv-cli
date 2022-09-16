@@ -8,7 +8,6 @@ import (
 	"log"
 	"sort"
 	"ttv-cli/internal/pkg/config"
-	twitch2 "ttv-cli/internal/pkg/twitch"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelpointscontext"
 	"ttv-cli/internal/pkg/twitch/gql/query/channel"
 	"ttv-cli/internal/pkg/twitch/pubsub/communitypointschannel"
@@ -17,8 +16,7 @@ import (
 
 type Model struct {
 	twitchChannel        channel.Channel
-	client               *twitch2.Client
-	config               config.Config
+	config               *config.Config
 	list                 list.Model
 	itemsById            map[string]*item
 	rewardsUpdateChannel chan communitypointschannel.Response
@@ -27,7 +25,7 @@ type Model struct {
 	pubsubClient         *pubsub.Client
 }
 
-func NewModel(pubsubClient *pubsub.Client, config config.Config, streamer string) Model {
+func NewModel(pubsubClient *pubsub.Client, config *config.Config, streamer string) Model {
 	c, err := channel.GetChannel(streamer)
 	if err != nil {
 		log.Fatalf("Failed to get channel information for '%s' - %s", streamer, err)
@@ -38,7 +36,6 @@ func NewModel(pubsubClient *pubsub.Client, config config.Config, streamer string
 
 	m := Model{
 		twitchChannel:        c,
-		client:               twitch2.NewClient(config.AuthToken),
 		config:               config,
 		list:                 list.New(make([]list.Item, 0), list.NewDefaultDelegate(), 0, 0),
 		itemsById:            make(map[string]*item),
@@ -47,7 +44,7 @@ func NewModel(pubsubClient *pubsub.Client, config config.Config, streamer string
 		notificationsChannel: make(chan string, 8),
 	}
 
-	channelPointsContext, err := channelpointscontext.Get(m.client, c.Name)
+	channelPointsContext, err := channelpointscontext.Get(m.config, c.Name)
 	if err != nil {
 		log.Fatalf("Could not fetch channel points context: %s", err)
 	}

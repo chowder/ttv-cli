@@ -6,7 +6,7 @@ import (
 	"github.com/Adeithe/go-twitch/pubsub"
 	"log"
 	"strings"
-	twitch2 "ttv-cli/internal/pkg/twitch"
+	config "ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/pubsub/communitypointsuser"
 )
 
@@ -44,7 +44,7 @@ func listenToPointsUpdates(update pointsUpdate) {
 	log.Printf("+%d points in channel %s, reason: %s, balance: %d\n", update.PointGain.TotalPoints, update.ChannelId, update.PointGain.ReasonCode, update.Balance.Balance)
 }
 
-func getPointsChannel(client *twitch2.Client, pubsubClient *pubsub.Client, userId string) (<-chan pointsUpdate, error) {
+func getPointsChannel(config *config.Config, pubsubClient *pubsub.Client, userId string) (<-chan pointsUpdate, error) {
 	const topic = "community-points-user-v1"
 
 	c := make(chan pointsUpdate)
@@ -70,7 +70,7 @@ func getPointsChannel(client *twitch2.Client, pubsubClient *pubsub.Client, userI
 	}
 
 	pubsubClient.OnShardMessage(handleUpdate)
-	err := pubsubClient.ListenWithAuth(client.GetAuthToken(), topic, userId)
+	err := pubsubClient.ListenWithAuth(config.GetAuthToken(), topic, userId)
 	if err != nil {
 		return nil, err
 	}

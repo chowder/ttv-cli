@@ -7,10 +7,11 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch"
 )
 
-func post(twitchClient *twitch.Client, request any) ([]byte, error) {
+func post(config *config.Config, request any) ([]byte, error) {
 	// Make request body
 	requestBody, err := json.Marshal(request)
 	if err != nil {
@@ -24,15 +25,15 @@ func post(twitchClient *twitch.Client, request any) ([]byte, error) {
 	}
 	req.Header.Set("Client-ID", twitch.DefaultClientId)
 	req.Header.Set("User-Agent", twitch.DefaultUserAgent)
-	if twitchClient != nil {
-		integrityToken, err := twitchClient.GetIntegrityToken()
+	if config != nil {
+		integrityToken, err := config.GetIntegrityToken()
 		if err != nil {
 			return nil, fmt.Errorf("could not get integrity token: %w", err)
 		}
 		req.Header.Set("Client-Integrity", integrityToken)
-		req.Header.Set("Authorization", "OAuth "+twitchClient.GetAuthToken())
-		req.Header.Set("Device-ID", twitchClient.GetDeviceId())
-		req.Header.Set("X-Device-Id", twitchClient.GetDeviceId())
+		req.Header.Set("Authorization", "OAuth "+config.GetAuthToken())
+		req.Header.Set("Device-ID", config.GetDeviceId())
+		req.Header.Set("X-Device-Id", config.GetDeviceId())
 	}
 
 	// Execute the POST request
@@ -67,6 +68,6 @@ func Post(request any) ([]byte, error) {
 	return post(nil, request)
 }
 
-func PostWithAuth(client *twitch.Client, request any) ([]byte, error) {
-	return post(client, request)
+func PostWithAuth(config *config.Config, request any) ([]byte, error) {
+	return post(config, request)
 }

@@ -7,7 +7,6 @@ import (
 	"math"
 	"ttv-cli/internal/app/live"
 	"ttv-cli/internal/pkg/config"
-	twitch2 "ttv-cli/internal/pkg/twitch"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelfollows"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
 )
@@ -21,7 +20,7 @@ var liveCmd = &cobra.Command{
 			log.Fatalf("Error reading config: %s\n", err)
 		}
 
-		client := twitch2.NewClient(c.AuthToken)
+		client := config.FromToken(c.GetAuthToken())
 
 		f, err := channelfollows.Get(client)
 		if err != nil {
