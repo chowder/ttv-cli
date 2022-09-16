@@ -164,7 +164,7 @@ func (m Model) redeemReward(i *item) {
 		input.TextInput = ":)" // FIXME
 	}
 
-	response, err := redeemcustomreward.Redeem(input, m.config.AuthToken)
+	response, err := redeemcustomreward.Redeem(m.client, input)
 	if err != nil {
 		fmt.Println("could not redeem reward: ", err)
 	}

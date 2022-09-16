@@ -5,6 +5,7 @@ import (
 	"log"
 	"ttv-cli/internal/app/miner"
 	"ttv-cli/internal/pkg/config"
+	"ttv-cli/internal/pkg/twitch"
 )
 
 var minerCmd = &cobra.Command{
@@ -20,7 +21,10 @@ func run() {
 	if err != nil {
 		log.Fatalln("could not read config file: ", err)
 	}
-	m := miner.New(c.AuthToken, c.TokenDetails.UserId)
+
+	client := twitch.NewClient(c.AuthToken)
+
+	m := miner.New(client, c.TokenDetails.UserId)
 	m.Start()
 }
 

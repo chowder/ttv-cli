@@ -9,26 +9,27 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	twitch2 "ttv-cli/internal/pkg/twitch"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelfollows"
 )
 
 type Miner struct {
-	AuthToken    string
 	UserId       string
+	client       *twitch2.Client
 	channels     []channelfollows.ChannelFollow
 	pubsubClient *pubsub.Client
 	eventBus     EventBus.Bus
 }
 
-func New(authToken string, userId string) Miner {
-	channels, err := channelfollows.Get(authToken)
+func New(client *twitch2.Client, userId string) Miner {
+	channels, err := channelfollows.Get(client)
 	if err != nil {
 		log.Fatalln("Unable to get followed channels: ", err)
 	}
 
 	return Miner{
-		AuthToken:    authToken,
 		UserId:       userId,
+		client:       client,
 		pubsubClient: twitch.PubSub(),
 		channels:     channels,
 		eventBus:     EventBus.New(),

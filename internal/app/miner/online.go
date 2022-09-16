@@ -7,6 +7,7 @@ import (
 	"golang.org/x/exp/slices"
 	"log"
 	"time"
+	twitch2 "ttv-cli/internal/pkg/twitch"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelfollows"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
 	"ttv-cli/internal/pkg/utils"
@@ -20,7 +21,7 @@ type StreamDetails struct {
 func (m Miner) subscribeStreamStatus(ctx context.Context) error {
 	log.Println("Subscribing to stream start events...")
 
-	c, err := getStreamStartChannel(ctx, m.AuthToken)
+	c, err := getStreamStartChannel(m.client, ctx)
 	if err != nil {
 		return fmt.Errorf("could not create stream start channel: %w", err)
 	}
@@ -71,8 +72,8 @@ func registerStreamStartHandlers(ctx context.Context, eventBus EventBus.Bus) err
 	return nil
 }
 
-func getStreamStartChannel(ctx context.Context, authToken string) (<-chan StreamDetails, error) {
-	follows, err := channelfollows.Get(authToken)
+func getStreamStartChannel(client *twitch2.Client, ctx context.Context) (<-chan StreamDetails, error) {
+	follows, err := channelfollows.Get(client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followed channels: %w", err)
 	}

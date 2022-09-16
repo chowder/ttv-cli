@@ -3,6 +3,7 @@ package redeemcustomreward
 import (
 	"encoding/json"
 	"fmt"
+	"ttv-cli/internal/pkg/twitch"
 	"ttv-cli/internal/pkg/twitch/gql"
 	"ttv-cli/internal/pkg/utils"
 )
@@ -57,14 +58,14 @@ func makeRequest(input Input) (request, error) {
 	}, nil
 }
 
-func Redeem(input Input, authToken string) (Response, error) {
+func Redeem(client *twitch.Client, input Input) (Response, error) {
 	var response Response
 	req, err := makeRequest(input)
 	if err != nil {
 		return response, fmt.Errorf("error generating GQL request: %w", err)
 	}
 
-	body, err := gql.PostWithAuth(req, authToken)
+	body, err := gql.PostWithAuth(client, req)
 	if err != nil {
 		return response, fmt.Errorf("error with GQL request: %w", err)
 	}

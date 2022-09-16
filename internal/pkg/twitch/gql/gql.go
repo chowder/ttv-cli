@@ -10,7 +10,7 @@ import (
 	"ttv-cli/internal/pkg/twitch"
 )
 
-func post(request any, authToken string) ([]byte, error) {
+func post(twitchClient *twitch.Client, request any) ([]byte, error) {
 	// Make request body
 	requestBody, err := json.Marshal(request)
 	if err != nil {
@@ -24,8 +24,15 @@ func post(request any, authToken string) ([]byte, error) {
 	}
 	req.Header.Set("Client-ID", twitch.DefaultClientId)
 	req.Header.Set("User-Agent", twitch.DefaultUserAgent)
-	if len(authToken) > 0 {
-		req.Header.Set("Authorization", "OAuth "+authToken)
+	if twitchClient != nil {
+		integrityToken, err := twitchClient.GetIntegrityToken()
+		if err != nil {
+			return nil, fmt.Errorf("could not get integrity token: %w", err)
+		}
+		req.Header.Set("Client-Integrity", integrityToken)
+		req.Header.Set("Authorization", "OAuth "+twitchClient.GetAuthToken())
+		req.Header.Set("Device-ID", twitchClient.GetDeviceId())
+		req.Header.Set("X-Device-Id", twitchClient.GetDeviceId())
 	}
 
 	// Execute the POST request
@@ -57,9 +64,9 @@ func post(request any, authToken string) ([]byte, error) {
 }
 
 func Post(request any) ([]byte, error) {
-	return post(request, "")
+	return post(nil, request)
 }
 
-func PostWithAuth(request any, authToken string) ([]byte, error) {
-	return post(request, authToken)
+func PostWithAuth(client *twitch.Client, request any) ([]byte, error) {
+	return post(client, request)
 }

@@ -9,6 +9,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	twitch2 "ttv-cli/internal/pkg/twitch"
 	"ttv-cli/internal/pkg/twitch/gql/operation/channelfollows"
 	"ttv-cli/internal/pkg/twitch/gql/operation/communitymomentcalloutclaim"
 	"ttv-cli/internal/pkg/twitch/gql/query/users"
@@ -21,7 +22,7 @@ type Moment communitymomentschannel.Response
 func (m Miner) subscribeMoments(ctx context.Context) error {
 	log.Println("Subscribing to moments...")
 
-	c, err := getMomentsChannel(m.pubsubClient, m.AuthToken)
+	c, err := getMomentsChannel(m.client, m.pubsubClient)
 	if err != nil {
 		return err
 	}
@@ -32,19 +33,19 @@ func (m Miner) subscribeMoments(ctx context.Context) error {
 		}
 	}()
 
-	if err := registerMomentsHandlers(ctx, m.AuthToken, m.eventBus); err != nil {
+	if err := registerMomentsHandlers(m.client, ctx, m.eventBus); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func registerMomentsHandlers(ctx context.Context, authToken string, eventBus EventBus.Bus) error {
+func registerMomentsHandlers(client *twitch2.Client, ctx context.Context, eventBus EventBus.Bus) error {
 	handler := func(moment Moment) {
 		momentId := moment.Data.MomentId
 		if len(momentId) > 0 {
 			log.Printf("Attempting to redeem moment ID: '%s'\n", momentId)
-			err := communitymomentcalloutclaim.Claim(momentId, authToken)
+			err := communitymomentcalloutclaim.Claim(client, momentId)
 			if err != nil {
 				log.Printf("could not claim moment: %s, error: %s\n", momentId, err)
 			}
@@ -59,8 +60,8 @@ func registerMomentsHandlers(ctx context.Context, authToken string, eventBus Eve
 	return eventBus.Subscribe(momentsTopic, handler)
 }
 
-func getMomentsChannel(client *pubsub.Client, authToken string) (<-chan Moment, error) {
-	followsById, err := getFollowsById(authToken)
+func getMomentsChannel(client *twitch2.Client, pubsubClient *pubsub.Client) (<-chan Moment, error) {
+	followsById, err := getFollowsById(client)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +70,7 @@ func getMomentsChannel(client *pubsub.Client, authToken string) (<-chan Moment, 
 
 	success := make([]string, 0)
 	for id, name := range followsById {
-		if err := client.ListenWithAuth(authToken, topic, id); err != nil {
+		if err := pubsubClient.ListenWithAuth(client.GetAuthToken(), topic, id); err != nil {
 			msg := fmt.Sprintf("Failed to listen to topic: '%s' for streamer: '%s' (%s) - %v", topic, name, id, err)
 			log.Println(msg)
 		}
@@ -91,15 +92,15 @@ func getMomentsChannel(client *pubsub.Client, authToken string) (<-chan Moment, 
 		}
 	}
 
-	client.OnShardMessage(handleUpdate)
+	pubsubClient.OnShardMessage(handleUpdate)
 
 	log.Printf("Mining Moments for users: %v\n", success)
 
 	return c, nil
 }
 
-func getFollowsById(authToken string) (map[string]string, error) {
-	follows, err := channelfollows.Get(authToken)
+func getFollowsById(client *twitch2.Client) (map[string]string, error) {
+	follows, err := channelfollows.Get(client)
 	if err != nil {
 		return nil, err
 	}

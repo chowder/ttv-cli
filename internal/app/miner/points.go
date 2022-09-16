@@ -6,6 +6,7 @@ import (
 	"github.com/Adeithe/go-twitch/pubsub"
 	"log"
 	"strings"
+	twitch2 "ttv-cli/internal/pkg/twitch"
 	"ttv-cli/internal/pkg/twitch/pubsub/communitypointsuser"
 )
 
@@ -14,7 +15,7 @@ type pointsUpdate communitypointsuser.PointsEarnedData
 func (m Miner) subscribePoints(ctx context.Context) error {
 	log.Println("Subscribing to points updates...")
 
-	c, err := getPointsChannel(m.pubsubClient, m.AuthToken, m.UserId)
+	c, err := getPointsChannel(m.client, m.pubsubClient, m.UserId)
 	if err != nil {
 		return err
 	}
@@ -43,7 +44,7 @@ func listenToPointsUpdates(update pointsUpdate) {
 	log.Printf("+%d points in channel %s, reason: %s, balance: %d\n", update.PointGain.TotalPoints, update.ChannelId, update.PointGain.ReasonCode, update.Balance.Balance)
 }
 
-func getPointsChannel(client *pubsub.Client, authToken string, userId string) (<-chan pointsUpdate, error) {
+func getPointsChannel(client *twitch2.Client, pubsubClient *pubsub.Client, userId string) (<-chan pointsUpdate, error) {
 	const topic = "community-points-user-v1"
 
 	c := make(chan pointsUpdate)
@@ -68,8 +69,8 @@ func getPointsChannel(client *pubsub.Client, authToken string, userId string) (<
 		}
 	}
 
-	client.OnShardMessage(handleUpdate)
-	err := client.ListenWithAuth(authToken, topic, userId)
+	pubsubClient.OnShardMessage(handleUpdate)
+	err := pubsubClient.ListenWithAuth(client.GetAuthToken(), topic, userId)
 	if err != nil {
 		return nil, err
 	}
