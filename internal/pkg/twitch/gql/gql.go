@@ -31,8 +31,9 @@ func post(config *config.Config, request any) ([]byte, error) {
 			return nil, fmt.Errorf("could not get integrity token: %w", err)
 		}
 		req.Header.Set("Client-Integrity", integrityToken)
+		req.Header.Set("Client-Session-Id", config.GetClientSessionId())
+		req.Header.Set("Client-Version", config.GetClientVersion())
 		req.Header.Set("Authorization", "OAuth "+config.GetAuthToken())
-		req.Header.Set("Device-ID", config.GetDeviceId())
 		req.Header.Set("X-Device-Id", config.GetDeviceId())
 	}
 

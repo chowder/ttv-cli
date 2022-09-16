@@ -2,13 +2,18 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"time"
 	"ttv-cli/internal/pkg/twitch"
+	"ttv-cli/internal/pkg/utils"
 )
+
+var clientVersionPattern = regexp.MustCompile("window\\.__twilightBuildID=\"(.*?)\"")
 
 type integrity struct {
 	Token      string `json:"token"`
@@ -38,9 +43,21 @@ func (c *Config) refreshIntegrityToken() error {
 		return err
 	}
 
+	clientVersion, err := getClientVersion()
+	if err != nil {
+		return fmt.Errorf("error getting Twitch client version: %w", err)
+	}
+
+	clientSessionId, err := utils.TokenHex(16)
+	if err != nil {
+		return fmt.Errorf("error generating client session ID: %w", err)
+	}
+
 	req.Header.Set("Authorization", "OAuth "+c.authToken)
 	req.Header.Set("Client-Id", twitch.DefaultClientId)
+	req.Header.Set("Client-Session-Id", clientSessionId)
 	req.Header.Set("User-Agent", twitch.DefaultUserAgent)
+	req.Header.Set("Client-Version", clientVersion)
 	req.Header.Set("X-Device-Id", c.deviceId)
 
 	Config := &http.Client{}
@@ -56,7 +73,24 @@ func (c *Config) refreshIntegrityToken() error {
 		return err
 	}
 
+	c.clientVersion = clientVersion
+	c.clientSessionId = clientSessionId
+
 	return nil
+}
+
+func getClientVersion() (string, error) {
+	resp, err := utils.HttpGet(twitch.TwitchHomeUrl, nil)
+	if err != nil {
+		return "", err
+	}
+
+	matches := clientVersionPattern.FindSubmatch(resp)
+	if len(matches) < 2 {
+		return "", errors.New("could not find client version")
+	}
+
+	return string(matches[1]), nil
 }
 
 func createRandomDeviceId() string {

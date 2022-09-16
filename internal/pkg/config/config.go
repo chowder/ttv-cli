@@ -18,11 +18,13 @@ type TokenDetails struct {
 }
 
 type Config struct {
-	authToken    string
-	tokenDetails *TokenDetails
-	deviceId     string
-	integrity    *integrity
-	mutex        sync.Mutex
+	authToken       string
+	clientVersion   string
+	clientSessionId string
+	tokenDetails    *TokenDetails
+	deviceId        string
+	integrity       *integrity
+	mutex           sync.Mutex
 }
 
 type configJson struct {
@@ -119,4 +121,12 @@ func (c *Config) GetAuthToken() string {
 
 func (c *Config) GetDeviceId() string {
 	return c.deviceId
+}
+
+func (c *Config) GetClientVersion() string {
+	return c.clientVersion
+}
+
+func (c *Config) GetClientSessionId() string {
+	return c.clientSessionId
 }

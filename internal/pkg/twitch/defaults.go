@@ -1,5 +1,6 @@
 package twitch
 
+const TwitchHomeUrl = "https://www.twitch.tv/"
 const IntegrityUrl = "https://gql.twitch.tv/integrity"
 const GqlApiUrl = "https://gql.twitch.tv/gql"
 const DefaultClientId = "kimne78kx3ncx6brgo4mv6wki5h1ko"
