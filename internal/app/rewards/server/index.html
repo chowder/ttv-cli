@@ -1,0 +1,102 @@
+<html lang="en">
+<head>
+    <title>Redemptions</title>
+</head>
+<body>
+<div>
+    <ul id="redemptions-list"></ul>
+</div>
+</body>
+</html>
+<script>
+    let socket = new WebSocket("ws://" + window.location.host + "/ws");
+    let ul = document.getElementById("redemptions-list");
+
+    socket.addEventListener("message", (event) => {
+        const reward = JSON.parse(event.data);
+
+        let li = ul.querySelector(`[data-id="${reward["id"]}"]`);
+        if (li !== null) {
+            let timeRemaining = toSecondsLeft(reward["cooldown_expires_at"]);
+            li.setAttribute("data-expires-at", reward["cooldown_expires_at"]);
+            li.setAttribute("data-time-remaining", timeRemaining.toString());
+            li.setAttribute("data-status", (timeRemaining > 0) ? "not-ready" : "ready");
+
+            let countdown = li.querySelector("#countdown");
+            countdown.innerHTML = timeRemaining;
+        } else {
+            addNewNode(reward);
+        }
+    })
+
+    const addNewNode = (reward) => {
+        let li = document.createElement("li");
+        li.setAttribute("data-id", reward["id"]);
+
+        let title = document.createElement("span");
+        title.setAttribute("id", "title");
+        title.appendChild(document.createTextNode(reward["title"]));
+        li.appendChild(title);
+
+        let countdown = document.createElement("span");
+        let timeRemaining = toSecondsLeft(reward["cooldown_expires_at"]);
+
+        countdown.setAttribute("id", "countdown");
+        countdown.appendChild(document.createTextNode(timeRemaining));
+        li.appendChild(countdown);
+
+        li.setAttribute("data-expires-at", reward["cooldown_expires_at"]);
+        li.setAttribute("data-time-remaining", timeRemaining.toString());
+        li.setAttribute("data-cost", reward["cost"]);
+        li.setAttribute("data-status", (timeRemaining > 0) ? "not-ready" : "ready");
+
+        ul.append(li);
+    }
+
+    const toSecondsLeft = (dateString) => {
+        let diffMilli = (Date.parse(dateString) - Date.now());
+        return diffMilli / 1000 >> 0;
+    }
+
+    setInterval(() => {
+        ul.childNodes.forEach((item) => {
+            let expiresAt = item.getAttribute("data-expires-at");
+            let timeRemaining = Math.max(toSecondsLeft(expiresAt), 0);
+
+            item.setAttribute("data-status", (timeRemaining > 0) ? "not-ready" : "ready");
+            item.setAttribute("data-time-remaining", timeRemaining.toString());
+
+            let countdown = item.querySelector("#countdown");
+            countdown.innerHTML = timeRemaining;
+        })
+    }, 1000)
+
+</script>
+<style>
+    body {
+        background-color: rgb(245 245 244);
+    }
+    #redemptions-list {
+        width: 720px;
+        list-style-type: none;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    #redemptions-list li {
+        width: auto;
+        padding: 0.75rem;
+        margin: 0.75rem;
+        border-radius: 0.5rem;
+    }
+    #redemptions-list #countdown {
+        float: right;
+    }
+    #redemptions-list [data-time-remaining="0"] > #countdown {
+        visibility: hidden;
+    }
+    #redemptions-list [data-status="ready"] {
+        background-color: rgb(207 250 254);
+    }
+    #redemptions-list [data-status="not-ready"] {
+        background-color: rgb(255 228 230);
+    }
+</style>
