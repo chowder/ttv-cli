@@ -63,9 +63,7 @@ func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		if err := c.conn.Close(); err != nil {
-			log.Printf("could not close websocket connection: %s\n", err)
-		}
+		_ = c.conn.Close()
 	}()
 
 	for {

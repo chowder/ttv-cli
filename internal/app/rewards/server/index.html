@@ -4,18 +4,18 @@
 </head>
 <body>
 <div>
-    <ul id="redemptions-list"></ul>
+    <div id="redemptions-list"></div>
 </div>
 </body>
 </html>
 <script>
-    let socket = new WebSocket("ws://" + window.location.host + "/ws");
-    let ul = document.getElementById("redemptions-list");
+    let socket = new WebSocket("ws://" + window.location.host + "/ws" + window.location.pathname);
+    let list = document.getElementById("redemptions-list");
 
     socket.addEventListener("message", (event) => {
         const reward = JSON.parse(event.data);
 
-        let li = ul.querySelector(`[data-id="${reward["id"]}"]`);
+        let li = list.querySelector(`[data-id="${reward["id"]}"]`);
         if (li !== null) {
             let timeRemaining = toSecondsLeft(reward["cooldown_expires_at"]);
             li.setAttribute("data-expires-at", reward["cooldown_expires_at"]);
@@ -26,31 +26,46 @@
             countdown.innerHTML = timeRemaining;
         } else {
             addNewNode(reward);
+            orderListByCost();
         }
     })
 
     const addNewNode = (reward) => {
-        let li = document.createElement("li");
-        li.setAttribute("data-id", reward["id"]);
+        let container = document.createElement("div");
+        container.setAttribute("data-id", reward["id"]);
 
+        let leftSpan = document.createElement("span");
+        container.appendChild(leftSpan);
+
+        // Create thumbnail
+        let thumbnail = document.createElement("img");
+        thumbnail.setAttribute("id", "thumbnail");
+        thumbnail.setAttribute("src", reward["image"]);
+        thumbnail.setAttribute("alt", "");
+        thumbnail.height = thumbnail.width = 20;
+        leftSpan.appendChild(thumbnail)
+
+        // Create title
         let title = document.createElement("span");
         title.setAttribute("id", "title");
         title.appendChild(document.createTextNode(reward["title"]));
-        li.appendChild(title);
+        leftSpan.appendChild(title);
 
+        // Create countdown
         let countdown = document.createElement("span");
         let timeRemaining = toSecondsLeft(reward["cooldown_expires_at"]);
 
         countdown.setAttribute("id", "countdown");
         countdown.appendChild(document.createTextNode(timeRemaining));
-        li.appendChild(countdown);
+        container.appendChild(countdown);
 
-        li.setAttribute("data-expires-at", reward["cooldown_expires_at"]);
-        li.setAttribute("data-time-remaining", timeRemaining.toString());
-        li.setAttribute("data-cost", reward["cost"]);
-        li.setAttribute("data-status", (timeRemaining > 0) ? "not-ready" : "ready");
+        // Set data attributes
+        container.setAttribute("data-expires-at", reward["cooldown_expires_at"]);
+        container.setAttribute("data-time-remaining", timeRemaining.toString());
+        container.setAttribute("data-cost", reward["cost"]);
+        container.setAttribute("data-status", (timeRemaining > 0) ? "not-ready" : "ready");
 
-        ul.append(li);
+        list.append(container);
     }
 
     const toSecondsLeft = (dateString) => {
@@ -58,8 +73,25 @@
         return diffMilli / 1000 >> 0;
     }
 
+    const orderListByCost = () => {
+        let nodes = Array.from(list.childNodes);
+        nodes.sort((l, r) => {
+            let leftCost = parseInt(l.getAttribute("data-cost"));
+            let rightCost = parseInt(r.getAttribute("data-cost"));
+            if (leftCost === rightCost) {
+                let leftTitle = l.querySelector("#title").innerHTML;
+                let rightTitle = r.querySelector("#title").innerHTML;
+                return leftTitle < rightTitle ? -1 : 1;
+            }
+            return leftCost - rightCost;
+        })
+        nodes.forEach((node) => {
+            list.appendChild(node);
+        });
+    }
+
     setInterval(() => {
-        ul.childNodes.forEach((item) => {
+        list.childNodes.forEach((item) => {
             let expiresAt = item.getAttribute("data-expires-at");
             let timeRemaining = Math.max(toSecondsLeft(expiresAt), 0);
 
@@ -74,29 +106,35 @@
 </script>
 <style>
     body {
-        background-color: rgb(245 245 244);
+        background-color: #f8f9fa;
     }
     #redemptions-list {
-        width: 720px;
-        list-style-type: none;
+        width: auto;
+        max-width: 480px;
+        display: flex;
+        flex-direction: column;
+        font-size: smaller;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
-    #redemptions-list li {
-        width: auto;
-        padding: 0.75rem;
-        margin: 0.75rem;
+    #redemptions-list > div {
+        display: flex;
+        padding: 0.375rem;
+        margin: 0.125rem;
+        justify-content: space-between;
+        align-items: center;
         border-radius: 0.5rem;
     }
-    #redemptions-list #countdown {
-        float: right;
+    #redemptions-list #thumbnail {
+        vertical-align: middle;
+        margin-right: 0.5rem;
     }
     #redemptions-list [data-time-remaining="0"] > #countdown {
         visibility: hidden;
     }
     #redemptions-list [data-status="ready"] {
-        background-color: rgb(207 250 254);
+        background-color: #dee3e8;
     }
     #redemptions-list [data-status="not-ready"] {
-        background-color: rgb(255 228 230);
+        background-color: #fcdee4;
     }
 </style>

@@ -18,6 +18,12 @@ const getChannelQuery = `query Channel($name: String) {
 				title
 				prompt
 				cost
+				defaultImage {
+					url
+				}
+				image {
+					url
+				}
 				cooldownExpiresAt
 				globalCooldownSetting {
 					globalCooldownSeconds
@@ -44,6 +50,10 @@ type GetChannelResponse struct {
 	} `json:"data"`
 }
 
+type Image struct {
+	Url string `json:"url"`
+}
+
 type Channel struct {
 	Id                      string                         `json:"id"`
 	Name                    string                         `json:"name"`
@@ -60,6 +70,8 @@ type CommunityPointsCustomReward struct {
 	Title                 string                                           `json:"title"`
 	Prompt                string                                           `json:"prompt"`
 	Cost                  int                                              `json:"cost"`
+	DefaultImage          Image                                            `json:"defaultImage"`
+	Image                 Image                                            `json:"image"`
 	Id                    string                                           `json:"id"`
 	CooldownExpiresAt     string                                           `json:"cooldownExpiresAt"`
 	GlobalCooldownSetting CommunityPointsCustomRewardGlobalCooldownSetting `json:"globalCooldownSetting"`
