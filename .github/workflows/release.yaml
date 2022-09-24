@@ -28,7 +28,7 @@ jobs:
           goversion: "https://go.dev/dl/go1.19.linux-amd64.tar.gz"
           project_path: "."
           binary_name: "ttv"
-          ldflags: -X ttv-cli/cmd.buildVersion=${{ env.RELEASE_TAG }}
+          ldflags: -X ttv-cli/cmd.buildVersion=${{ env.RELEASE_TAG }} -s -w
           extra_files: LICENSE README.md
           md5sum: FALSE
           overwrite: TRUE
