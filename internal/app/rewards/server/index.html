@@ -9,7 +9,8 @@
 </body>
 </html>
 <script>
-    let socket = new WebSocket("ws://" + window.location.host + "/ws" + window.location.pathname);
+    let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    let socket = new WebSocket(`${protocol}//${window.location.host}/ws${window.location.pathname}`);
     let list = document.getElementById("redemptions-list");
 
     socket.addEventListener("message", (event) => {
@@ -43,7 +44,7 @@
         thumbnail.setAttribute("src", reward["image"]);
         thumbnail.setAttribute("alt", "");
         thumbnail.height = thumbnail.width = 20;
-        leftSpan.appendChild(thumbnail)
+        leftSpan.appendChild(thumbnail);
 
         // Create title
         let title = document.createElement("span");
@@ -101,13 +102,14 @@
             let countdown = item.querySelector("#countdown");
             countdown.innerHTML = timeRemaining;
         })
-    }, 1000)
+    }, 1000);
 
 </script>
 <style>
     body {
         background-color: #f8f9fa;
     }
+
     #redemptions-list {
         width: auto;
         max-width: 480px;
@@ -116,6 +118,7 @@
         font-size: smaller;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
+
     #redemptions-list > div {
         display: flex;
         padding: 0.375rem;
@@ -124,16 +127,20 @@
         align-items: center;
         border-radius: 0.5rem;
     }
+
     #redemptions-list #thumbnail {
         vertical-align: middle;
         margin-right: 0.5rem;
     }
+
     #redemptions-list [data-time-remaining="0"] > #countdown {
         visibility: hidden;
     }
+
     #redemptions-list [data-status="ready"] {
         background-color: #dee3e8;
     }
+
     #redemptions-list [data-status="not-ready"] {
         background-color: #fcdee4;
     }
