@@ -1,6 +1,7 @@
 package server
 
 import (
+	"embed"
 	_ "embed"
 	"errors"
 	"log"
@@ -10,8 +11,13 @@ import (
 	"ttv-cli/internal/pkg/twitch/gql/query/channel"
 )
 
-//go:embed index.html
-var indexHtml []byte
+var (
+	//go:embed index.html
+	indexHtml []byte
+
+	//go:embed assets
+	assets embed.FS
+)
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
@@ -31,8 +37,8 @@ func Run(addr string) {
 	hubsByStreamer := make(map[string]*Hub)
 	mutex := sync.Mutex{}
 
+	http.Handle("/assets/", http.FileServer(http.FS(assets)))
 	http.DefaultServeMux.HandleFunc("/", serveHome)
-
 	http.DefaultServeMux.HandleFunc("/ws/", func(w http.ResponseWriter, r *http.Request) {
 		mutex.Lock()
 		defer mutex.Unlock()
