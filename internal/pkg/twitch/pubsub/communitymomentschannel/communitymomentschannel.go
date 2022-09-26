@@ -1,5 +1,7 @@
 package communitymomentschannel
 
+const Topic = "community-moments-channel-v1"
+
 type Response struct {
 	Type string `json:"type"`
 	Data struct {

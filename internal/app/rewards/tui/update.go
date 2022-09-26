@@ -77,12 +77,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) subscribeToRewards() {
-	err := m.pubsubClient.Listen("community-points-channel-v1", m.twitchChannel.Id)
+	err := m.pubsubClient.Listen(communitypointschannel.Topic, m.twitchChannel.Id)
 	if err != nil {
-		log.Fatalf("Could not subscribe to community-points-channel-v1: %s\n", err)
+		log.Fatalf("Could not subscribe to %s: %s\n", communitypointschannel.Topic, err)
 	}
 
-	subscribedTopic := "community-points-channel-v1." + m.twitchChannel.Id
+	subscribedTopic := communitypointschannel.Topic + "." + m.twitchChannel.Id
 	handleUpdate := func(_ int, topic string, data []byte) {
 		if topic == subscribedTopic {
 			var response communitypointschannel.Response
@@ -105,12 +105,12 @@ func (m Model) subscribeToPoints() {
 	}
 
 	userId := details.UserId
-	err = m.pubsubClient.ListenWithAuth(m.config.GetAuthToken(), "community-points-user-v1", userId)
+	err = m.pubsubClient.ListenWithAuth(m.config.GetAuthToken(), communitypointsuser.Topic, userId)
 	if err != nil {
-		log.Fatalf("Could not subscribe to community-points-user-v1.%s: %s\n", m.twitchChannel.Id, err)
+		log.Fatalf("Could not subscribe to %s.%s: %s\n", communitypointsuser.Topic, m.twitchChannel.Id, err)
 	}
 
-	subscribedTopic := "community-points-user-v1." + userId
+	subscribedTopic := communitypointsuser.Topic + "." + userId
 	handleUpdate := func(_ int, topic string, data []byte) {
 		if topic == subscribedTopic {
 			var response communitypointsuser.Response

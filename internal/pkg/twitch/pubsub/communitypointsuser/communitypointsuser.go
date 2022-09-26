@@ -1,11 +1,11 @@
 package communitypointsuser
 
-// topic: community-points-user-v1
-
 import (
 	"encoding/json"
 	"time"
 )
+
+const Topic = "community-points-user-v1"
 
 // PointsSpentData Use when Response#Type is 'points-spent'
 // Note - the structure for `PointsSpentData` is a subset of `PointsEarnedData`, and therefore can be used where only

@@ -45,12 +45,11 @@ func listenToPointsUpdates(update pointsUpdate) {
 }
 
 func getPointsChannel(config *config.Config, pubsubClient *pubsub.Client, userId string) (<-chan pointsUpdate, error) {
-	const topic = "community-points-user-v1"
 
 	c := make(chan pointsUpdate)
 
 	handleUpdate := func(s int, t string, data []byte) {
-		if strings.HasPrefix(t, topic) {
+		if strings.HasPrefix(t, communitypointsuser.Topic) {
 			var resp communitypointsuser.Response
 			if err := json.Unmarshal(data, &resp); err != nil {
 				log.Printf("could not unmarshal response: %s, error %s\n", string(data), err)
@@ -70,7 +69,7 @@ func getPointsChannel(config *config.Config, pubsubClient *pubsub.Client, userId
 	}
 
 	pubsubClient.OnShardMessage(handleUpdate)
-	err := pubsubClient.ListenWithAuth(config.GetAuthToken(), topic, userId)
+	err := pubsubClient.ListenWithAuth(config.GetAuthToken(), communitypointsuser.Topic, userId)
 	if err != nil {
 		return nil, err
 	}

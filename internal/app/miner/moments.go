@@ -66,12 +66,10 @@ func getMomentsChannel(config *config.Config, pubsubClient *pubsub.Client) (<-ch
 		return nil, err
 	}
 
-	const topic = "community-moments-channel-v1"
-
 	success := make([]string, 0)
 	for id, name := range followsById {
-		if err := pubsubClient.ListenWithAuth(config.GetAuthToken(), topic, id); err != nil {
-			msg := fmt.Sprintf("Failed to listen to topic: '%s' for streamer: '%s' (%s) - %v", topic, name, id, err)
+		if err := pubsubClient.ListenWithAuth(config.GetAuthToken(), communitymomentschannel.Topic, id); err != nil {
+			msg := fmt.Sprintf("Failed to listen to topic: '%s' for streamer: '%s' (%s) - %v", communitymomentschannel.Topic, name, id, err)
 			log.Println(msg)
 		}
 		success = append(success, name)
@@ -81,7 +79,7 @@ func getMomentsChannel(config *config.Config, pubsubClient *pubsub.Client) (<-ch
 	c := make(chan Moment)
 
 	handleUpdate := func(s int, t string, data []byte) {
-		if strings.HasPrefix(t, topic) {
+		if strings.HasPrefix(t, communitymomentschannel.Topic) {
 			var resp communitymomentschannel.Response
 			if err := json.Unmarshal(data, &resp); err != nil {
 				log.Printf("could not unmarshal response: %s, error %s\n", string(data), err)

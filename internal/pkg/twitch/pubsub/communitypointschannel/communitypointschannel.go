@@ -1,5 +1,7 @@
 package communitypointschannel
 
+const Topic = "community-points-channel-v1"
+
 type Image struct {
 	Url1x string `json:"url_1x"`
 	Url2x string `json:"url_2x"`

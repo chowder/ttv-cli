@@ -54,9 +54,9 @@ func (h *Hub) pumpEvents(streamer string) {
 
 	go func() {
 		p := pubsub.New()
-		err := p.Listen("community-points-channel-v1", c.Id)
+		err := p.Listen(communitypointschannel.Topic, c.Id)
 		if err != nil {
-			log.Fatalln("Could not subscribe to community-points-channel-v1: ", err)
+			log.Fatalf("Could not subscribe to %s: %s\n", communitypointschannel.Topic, err)
 		}
 
 		p.OnShardMessage(func(shard int, topic string, data []byte) {
