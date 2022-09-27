@@ -13,7 +13,8 @@ type reward struct {
 	CooldownExpiresAt string `json:"cooldown_expires_at"`
 	Id                string `json:"id"`
 	Cost              int    `json:"cost"`
-	Image             string `json:"image,omitempty"`
+	Image             string `json:"image"`
+	Hidden            bool   `json:"hidden"`
 }
 
 func (r *reward) toBytes() []byte {
@@ -34,15 +35,13 @@ func (h *Hub) pumpEvents(streamer string) {
 
 	go func() {
 		for _, customReward := range c.CommunityPointsSettings.CustomRewards {
-			if !customReward.IsEnabled || customReward.IsPaused {
-				continue
-			}
 			r := &reward{
 				Title:             customReward.Title,
 				CooldownExpiresAt: customReward.CooldownExpiresAt,
 				Id:                customReward.Id,
 				Cost:              customReward.Cost,
 				Image:             customReward.Image.Url,
+				Hidden:            !customReward.IsEnabled || customReward.IsPaused,
 			}
 			if len(r.Image) == 0 {
 				r.Image = customReward.DefaultImage.Url
@@ -72,11 +71,12 @@ func (h *Hub) pumpEvents(streamer string) {
 					CooldownExpiresAt: updatedReward.CooldownExpiresAt,
 					Cost:              updatedReward.Cost,
 					Image:             updatedReward.Image.Url1x,
+					Hidden:            !updatedReward.IsEnabled || updatedReward.IsPaused,
 				}
 				if len(r.Image) == 0 {
 					r.Image = updatedReward.DefaultImage.Url1x
 				}
-				h.rewardsById.Store(updatedReward.Id, r)
+				h.rewardsById.LoadOrStore(updatedReward.Id, r)
 				h.broadcast <- r.toBytes()
 			}
 		})

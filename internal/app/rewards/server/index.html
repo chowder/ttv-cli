@@ -18,22 +18,38 @@
     socket.addEventListener("message", (event) => {
         const reward = JSON.parse(event.data);
 
+        if (reward["hidden"] === true) {
+            removeNode(reward);
+            return;
+        }
+
         let li = list.querySelector(`[data-id="${reward["id"]}"]`);
         if (li !== null) {
-            let timeRemaining = toSecondsLeft(reward["cooldown_expires_at"]);
-            li.setAttribute("data-expires-at", reward["cooldown_expires_at"]);
-            li.setAttribute("data-time-remaining", timeRemaining.toString());
-            li.setAttribute("data-status", (timeRemaining > 0) ? "not-ready" : "ready");
-
-            let countdown = li.querySelector("#countdown");
-            countdown.innerHTML = timeRemaining;
+            updateNode(reward, li);
         } else {
-            addNewNode(reward);
+            addNode(reward);
             orderListByCost();
         }
-    })
+    });
 
-    const addNewNode = (reward) => {
+    const removeNode = (reward) => {
+        let li = list.querySelector(`[data-id="${reward["id"]}"]`);
+        if (li !== null) {
+            list.removeChild(li);
+        }
+    }
+
+    const updateNode = (reward, node) => {
+        let timeRemaining = toSecondsLeft(reward["cooldown_expires_at"]);
+        node.setAttribute("data-expires-at", reward["cooldown_expires_at"]);
+        node.setAttribute("data-time-remaining", timeRemaining.toString());
+        node.setAttribute("data-status", (timeRemaining > 0) ? "not-ready" : "ready");
+
+        let countdown = node.querySelector("#countdown");
+        countdown.innerHTML = timeRemaining;
+    }
+
+    const addNode = (reward) => {
         let container = document.createElement("div");
         container.setAttribute("data-id", reward["id"]);
 
