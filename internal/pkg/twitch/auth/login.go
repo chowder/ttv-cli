@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/term"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -80,7 +81,7 @@ func GetAccessToken(username string, password string) (string, error) {
 
 	defer httpResp.Body.Close()
 
-	body, err := ioutil.ReadAll(httpResp.Body)
+	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return "", fmt.Errorf("error reading HTTP response body: %w", err)
 	}

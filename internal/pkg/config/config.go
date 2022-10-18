@@ -7,6 +7,7 @@ import (
 	"path"
 	"sync"
 	"ttv-cli/internal/pkg/twitch/auth"
+	"ttv-cli/internal/pkg/utils"
 )
 
 type TokenDetails struct {
@@ -23,22 +24,23 @@ type Config struct {
 	clientSessionId string
 	tokenDetails    *TokenDetails
 	deviceId        string
-	integrity       *integrity
 	mutex           sync.Mutex
 }
 
 type configJson struct {
-	AuthToken string `json:"auth_token"`
-	DeviceId  string `json:"device_id"`
+	AuthToken       string `json:"auth_token"`
+	ClientSessionId string `json:"client_session_id"`
+	DeviceId        string `json:"device_id"`
 }
 
 func FromToken(authToken string) *Config {
+	clientSessionId, _ := utils.TokenHex(16)
 	return &Config{
-		authToken:    authToken,
-		tokenDetails: nil,
-		deviceId:     createRandomDeviceId(),
-		integrity:    nil,
-		mutex:        sync.Mutex{},
+		authToken:       authToken,
+		tokenDetails:    nil,
+		deviceId:        createRandomDeviceId(),
+		clientSessionId: clientSessionId,
+		mutex:           sync.Mutex{},
 	}
 }
 
@@ -76,6 +78,8 @@ func CreateOrRead() (*Config, error) {
 		return nil, fmt.Errorf("error when validating Twitch auth token: %w", err)
 	}
 
+	_ = c.Save()
+	
 	return c, nil
 }
 
@@ -83,13 +87,16 @@ func (c configJson) ToConfig() *Config {
 	if len(c.DeviceId) == 0 {
 		c.DeviceId = createRandomDeviceId()
 	}
+	if len(c.ClientSessionId) == 0 {
+		c.ClientSessionId, _ = utils.TokenHex(16)
+	}
 
 	return &Config{
-		authToken:    c.AuthToken,
-		tokenDetails: nil,
-		deviceId:     c.DeviceId,
-		integrity:    nil,
-		mutex:        sync.Mutex{},
+		authToken:       c.AuthToken,
+		tokenDetails:    nil,
+		deviceId:        c.DeviceId,
+		clientSessionId: c.ClientSessionId,
+		mutex:           sync.Mutex{},
 	}
 }
 
@@ -98,7 +105,14 @@ func (c *Config) Save() error {
 	defer c.mutex.Unlock()
 
 	configFilePath := GetConfigFilePath()
-	contents, err := json.MarshalIndent(c, "", "  ")
+
+	cj := configJson{
+		AuthToken:       c.authToken,
+		ClientSessionId: c.clientSessionId,
+		DeviceId:        c.deviceId,
+	}
+
+	contents, err := json.MarshalIndent(cj, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -121,10 +135,6 @@ func (c *Config) GetAuthToken() string {
 
 func (c *Config) GetDeviceId() string {
 	return c.deviceId
-}
-
-func (c *Config) GetClientVersion() string {
-	return c.clientVersion
 }
 
 func (c *Config) GetClientSessionId() string {

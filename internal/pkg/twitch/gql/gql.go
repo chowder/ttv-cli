@@ -31,7 +31,6 @@ func post(config *config.Config, request any) ([]byte, error) {
 	req.Header.Set("Api-Consumer-Type", twitch.DefaultApiConsumerType)
 	if config != nil {
 		req.Header.Set("Client-Session-Id", config.GetClientSessionId())
-		req.Header.Set("Client-Version", config.GetClientVersion())
 		req.Header.Set("Authorization", "OAuth "+config.GetAuthToken())
 		req.Header.Set("X-Device-Id", config.GetDeviceId())
 	}
