@@ -80,7 +80,7 @@ func (c *Config) refreshIntegrityToken() error {
 }
 
 func getClientVersion() (string, error) {
-	resp, err := utils.HttpGet(twitch.TwitchHomeUrl, nil)
+	resp, err := utils.HttpGet(twitch.HomeUrl, nil)
 	if err != nil {
 		return "", err
 	}

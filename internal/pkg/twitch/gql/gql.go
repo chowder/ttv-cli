@@ -23,14 +23,13 @@ func post(config *config.Config, request any) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
 	}
+
 	req.Header.Set("Client-ID", twitch.DefaultClientId)
 	req.Header.Set("User-Agent", twitch.DefaultUserAgent)
+	req.Header.Set("X-App-Version", twitch.DefaultAppVersion)
+	req.Header.Set("Accept", twitch.DefaultAcceptHeader)
+	req.Header.Set("Api-Consumer-Type", twitch.DefaultApiConsumerType)
 	if config != nil {
-		integrityToken, err := config.GetIntegrityToken()
-		if err != nil {
-			return nil, fmt.Errorf("could not get integrity token: %w", err)
-		}
-		req.Header.Set("Client-Integrity", integrityToken)
 		req.Header.Set("Client-Session-Id", config.GetClientSessionId())
 		req.Header.Set("Client-Version", config.GetClientVersion())
 		req.Header.Set("Authorization", "OAuth "+config.GetAuthToken())

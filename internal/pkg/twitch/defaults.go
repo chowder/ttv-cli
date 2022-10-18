@@ -1,7 +1,11 @@
 package twitch
 
-const TwitchHomeUrl = "https://www.twitch.tv/"
+const HomeUrl = "https://www.twitch.tv/"
 const IntegrityUrl = "https://gql.twitch.tv/integrity"
 const GqlApiUrl = "https://gql.twitch.tv/gql"
-const DefaultClientId = "kimne78kx3ncx6brgo4mv6wki5h1ko"
-const DefaultUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36"
+
+const DefaultClientId = "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"
+const DefaultUserAgent = "Dalvik/2.1.0 (Linux; U; Android 7.1.2; SM-N976N Build/N2G48C) tv.twitch.android.app/13.9.0/1309000"
+const DefaultAppVersion = "13.9.0"
+const DefaultAcceptHeader = "application/vnd.twitchtv.v3+json"
+const DefaultApiConsumerType = "mobile; Android/1309000"
