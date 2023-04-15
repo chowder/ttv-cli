@@ -40,7 +40,7 @@ func (m Miner) subscribeMoments(ctx context.Context) error {
 	return nil
 }
 
-func registerMomentsHandlers(config *config.Config, ctx context.Context, eventBus EventBus.Bus) error {
+func registerMomentsHandlers(config config.Config, ctx context.Context, eventBus EventBus.Bus) error {
 	handler := func(moment Moment) {
 		momentId := moment.Data.MomentId
 		if len(momentId) > 0 {
@@ -60,7 +60,7 @@ func registerMomentsHandlers(config *config.Config, ctx context.Context, eventBu
 	return eventBus.Subscribe(momentsTopic, handler)
 }
 
-func getMomentsChannel(config *config.Config, pubsubClient *pubsub.Client) (<-chan Moment, error) {
+func getMomentsChannel(config config.Config, pubsubClient *pubsub.Client) (<-chan Moment, error) {
 	followsById, err := getFollowsById(config)
 	if err != nil {
 		return nil, err
@@ -68,7 +68,8 @@ func getMomentsChannel(config *config.Config, pubsubClient *pubsub.Client) (<-ch
 
 	success := make([]string, 0)
 	for id, name := range followsById {
-		if err := pubsubClient.ListenWithAuth(config.GetAuthToken(), communitymomentschannel.Topic, id); err != nil {
+		// FIXME
+		if err := pubsubClient.ListenWithAuth("", communitymomentschannel.Topic, id); err != nil {
 			msg := fmt.Sprintf("Failed to listen to topic: '%s' for streamer: '%s' (%s) - %v", communitymomentschannel.Topic, name, id, err)
 			log.Println(msg)
 		}
@@ -97,7 +98,7 @@ func getMomentsChannel(config *config.Config, pubsubClient *pubsub.Client) (<-ch
 	return c, nil
 }
 
-func getFollowsById(config *config.Config) (map[string]string, error) {
+func getFollowsById(config config.Config) (map[string]string, error) {
 	follows, err := channelfollows.Get(config)
 	if err != nil {
 		return nil, err
@@ -108,7 +109,7 @@ func getFollowsById(config *config.Config) (map[string]string, error) {
 		loginsOfFollows[i] = f.Login
 	}
 
-	userInfos, err := users.GetUsers(loginsOfFollows)
+	userInfos, err := users.GetUsers(config, loginsOfFollows)
 	if err != nil {
 		return nil, err
 	}

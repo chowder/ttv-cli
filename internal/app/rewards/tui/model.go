@@ -16,7 +16,7 @@ import (
 
 type Model struct {
 	twitchChannel        channel.Channel
-	config               *config.Config
+	config               config.Config
 	list                 list.Model
 	itemsById            map[string]*item
 	rewardsUpdateChannel chan communitypointschannel.Response
@@ -25,8 +25,8 @@ type Model struct {
 	pubsubClient         *pubsub.Client
 }
 
-func NewModel(pubsubClient *pubsub.Client, config *config.Config, streamer string) Model {
-	c, err := channel.GetChannel(streamer)
+func NewModel(pubsubClient *pubsub.Client, config config.Config, streamer string) Model {
+	c, err := channel.GetChannel(config, streamer)
 	if err != nil {
 		log.Fatalf("Failed to get channel information for '%s' - %s", streamer, err)
 	}

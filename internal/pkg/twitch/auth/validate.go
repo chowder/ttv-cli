@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
+	"github.com/go-resty/resty/v2"
 )
 
 const validateUrl = "https://id.twitch.tv/oauth2/validate"
@@ -28,29 +27,14 @@ func Validate(token string) (Response, error) {
 		return Response{}, errors.New("token cannot be null or empty")
 	}
 
-	client := &http.Client{}
+	client := resty.New()
+	resp, err := client.R().
+		SetHeader("Authorization", "Bearer "+token).
+		Get(validateUrl)
 
-	httpReq, err := http.NewRequest("GET", validateUrl, nil)
-	if err != nil {
-		return Response{}, fmt.Errorf("error creating HTTP request: %w", err)
-	}
-	httpReq.Header.Set("Authorization", "OAuth "+token)
-
-	httpResp, err := client.Do(httpReq)
-	if err != nil {
-		return Response{}, fmt.Errorf("error performing HTTP request: %w", err)
-	}
-
-	defer httpResp.Body.Close()
-
-	body, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return Response{}, fmt.Errorf("error reading HTTP response body: %w", err)
-	}
-
-	if httpResp.StatusCode == 401 {
+	if resp.StatusCode() == 401 {
 		var response invalidTokenResponse
-		if err = json.Unmarshal(body, &response); err != nil {
+		if err = json.Unmarshal(resp.Body(), &response); err != nil {
 			return Response{}, fmt.Errorf("error unmarshalling HTTP response body: %w", err)
 		}
 
@@ -58,7 +42,7 @@ func Validate(token string) (Response, error) {
 	}
 
 	var response Response
-	if err := json.Unmarshal(body, &response); err != nil {
+	if err := json.Unmarshal(resp.Body(), &response); err != nil {
 		return response, fmt.Errorf("error unmarshalling HTTP response body: %w", err)
 	}
 

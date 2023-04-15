@@ -44,7 +44,7 @@ func listenToPointsUpdates(update pointsUpdate) {
 	log.Printf("+%d points in channel %s, reason: %s, balance: %d\n", update.PointGain.TotalPoints, update.ChannelId, update.PointGain.ReasonCode, update.Balance.Balance)
 }
 
-func getPointsChannel(config *config.Config, pubsubClient *pubsub.Client, userId string) (<-chan pointsUpdate, error) {
+func getPointsChannel(config config.Config, pubsubClient *pubsub.Client, userId string) (<-chan pointsUpdate, error) {
 
 	c := make(chan pointsUpdate)
 
@@ -69,7 +69,8 @@ func getPointsChannel(config *config.Config, pubsubClient *pubsub.Client, userId
 	}
 
 	pubsubClient.OnShardMessage(handleUpdate)
-	err := pubsubClient.ListenWithAuth(config.GetAuthToken(), communitypointsuser.Topic, userId)
+	// FIXME
+	err := pubsubClient.ListenWithAuth("", communitypointsuser.Topic, userId)
 	if err != nil {
 		return nil, err
 	}

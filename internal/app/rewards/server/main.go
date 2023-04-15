@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql/query/channel"
 )
 
@@ -34,6 +35,11 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func Run(addr string) {
+	c, err := config.CreateNoAuth()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	hubsByStreamer := make(map[string]*Hub)
 	mutex := sync.Mutex{}
 
@@ -48,7 +54,7 @@ func Run(addr string) {
 
 		hub, ok := hubsByStreamer[streamer]
 		if !ok {
-			hub, err := validateAndMakeNewHub(streamer)
+			hub, err := validateAndMakeNewHub(c, streamer)
 			if err != nil {
 				log.Println("Could not create hub for streamer:", streamer, ", error:", err)
 				http.Error(w, "streamer not found", http.StatusNotFound)
@@ -63,15 +69,15 @@ func Run(addr string) {
 	})
 
 	log.Println("Serving on:", addr)
-	err := http.ListenAndServe(addr, http.DefaultServeMux)
+	err = http.ListenAndServe(addr, http.DefaultServeMux)
 	if err != nil {
 		log.Fatalln("ListenAndServe: ", err)
 	}
 }
 
 // validateAndMakeNewHub first validates that the streamer is valid, and returns a hub if so
-func validateAndMakeNewHub(streamer string) (*Hub, error) {
-	c, err := channel.GetChannel(streamer)
+func validateAndMakeNewHub(config config.Config, streamer string) (*Hub, error) {
+	c, err := channel.GetChannel(config, streamer)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +86,6 @@ func validateAndMakeNewHub(streamer string) (*Hub, error) {
 	}
 
 	hub := newHub()
-	go hub.run(streamer)
+	go hub.run(config, streamer)
 	return hub, nil
 }

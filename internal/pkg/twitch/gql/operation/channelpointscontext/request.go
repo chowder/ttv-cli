@@ -41,9 +41,9 @@ func makeRequest(channelLogin string) request {
 	}
 }
 
-func Get(c *config.Config, channelLogin string) (Response, error) {
+func Get(c config.Config, channelLogin string) (Response, error) {
 	req := makeRequest(channelLogin)
-	resp, err := gql.PostWithAuth(c, req)
+	resp, err := gql.Post(c, req)
 	if err != nil {
 		return Response{}, fmt.Errorf("error with GQL request: %w", err)
 	}

@@ -37,7 +37,7 @@ func makeRequest() channelFollowsRequest {
 		Extensions: extensions{
 			PersistedQuery: persistedQuery{
 				Version:    1,
-				Sha256Hash: "4b9cb31b54b9213e5760f2f6e9e935ad09924cac2f78aac51f8a64d85f028ed0",
+				Sha256Hash: "eecf815273d3d949e5cf0085cc5084cd8a1b5b7b6f7990cf43cb0beadf546907",
 			},
 		},
 	}
@@ -49,9 +49,9 @@ type ChannelFollow struct {
 }
 
 // Get TODO: Implement cursor following to handle >100 follows
-func Get(c *config.Config) ([]ChannelFollow, error) {
+func Get(c config.Config) ([]ChannelFollow, error) {
 	req := makeRequest()
-	respBody, err := gql.PostWithAuth(c, req)
+	respBody, err := gql.Post(c, req)
 	if err != nil {
 		return nil, fmt.Errorf("error with GQL request: %w", err)
 	}

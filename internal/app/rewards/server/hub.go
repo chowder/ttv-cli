@@ -1,6 +1,9 @@
 package server
 
-import "sync"
+import (
+	"sync"
+	"ttv-cli/internal/pkg/config"
+)
 
 type Hub struct {
 	clients     map[*Client]bool
@@ -20,8 +23,8 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) run(streamer string) {
-	go h.pumpEvents(streamer)
+func (h *Hub) run(config config.Config, streamer string) {
+	go h.pumpEvents(config, streamer)
 	for {
 		select {
 		case client := <-h.register:

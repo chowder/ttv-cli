@@ -18,9 +18,16 @@ var rewardsCmd = &cobra.Command{
 	Args:       cobra.ExactArgs(1),
 	ArgAliases: []string{"streamer"},
 	Run: func(cmd *cobra.Command, args []string) {
-		c, err := config.CreateOrRead()
+		c, err := config.Load()
 		if err != nil {
-			log.Fatalln("Error reading config: ", err)
+			c, err = config.Create()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			err = c.Save()
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 		if loggingEnabled {

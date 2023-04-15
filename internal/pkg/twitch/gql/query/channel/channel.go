@@ -3,6 +3,7 @@ package channel
 import (
 	"encoding/json"
 	"fmt"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
@@ -86,11 +87,11 @@ type CommunityPointsCustomRewardGlobalCooldownSetting struct {
 }
 
 // GetChannel Note that this function will not throw if a channel was not found for the provided name
-func GetChannel(name string) (Channel, error) {
+func GetChannel(config config.Config, name string) (Channel, error) {
 	request := GetChannelRequest{Query: getChannelQuery}
 	request.Variables.Name = name
 
-	body, err := gql.Post(request)
+	body, err := gql.Post(config, request)
 	if err != nil {
 		return Channel{}, fmt.Errorf("GetChannel: error with GQL request: %w", err)
 	}
