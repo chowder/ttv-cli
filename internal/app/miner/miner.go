@@ -15,25 +15,20 @@ import (
 
 type Miner struct {
 	UserId       string
-	client       *config.Config
+	client       config.Config
 	channels     []channelfollows.ChannelFollow
 	pubsubClient *pubsub.Client
 	eventBus     EventBus.Bus
 }
 
-func New(config *config.Config) Miner {
+func New(config config.Config) Miner {
 	channels, err := channelfollows.Get(config)
 	if err != nil {
 		log.Fatalln("Unable to get followed channels: ", err)
 	}
 
-	details, err := config.GetTokenDetails()
-	if err != nil {
-		log.Fatalln("Could not get token details: ", err)
-	}
-
 	return Miner{
-		UserId:       details.UserId,
+		UserId:       "",
 		client:       config,
 		pubsubClient: twitch.PubSub(),
 		channels:     channels,

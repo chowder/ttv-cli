@@ -58,14 +58,14 @@ func makeRequest(input Input) (request, error) {
 	}, nil
 }
 
-func Redeem(c *config.Config, input Input) (Response, error) {
+func Redeem(c config.Config, input Input) (Response, error) {
 	var response Response
 	req, err := makeRequest(input)
 	if err != nil {
 		return response, fmt.Errorf("error generating GQL request: %w", err)
 	}
 
-	body, err := gql.PostWithAuth(c, req)
+	body, err := gql.Post(c, req)
 	if err != nil {
 		return response, fmt.Errorf("error with GQL request: %w", err)
 	}

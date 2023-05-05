@@ -47,9 +47,9 @@ func makeRequest(momentId string) request {
 	}
 }
 
-func Claim(c *config.Config, momentId string) error {
+func Claim(c config.Config, momentId string) error {
 	req := makeRequest(momentId)
-	resp, err := gql.PostWithAuth(c, req)
+	resp, err := gql.Post(c, req)
 	if err != nil {
 		return fmt.Errorf("error with GQL request: %w", err)
 	}

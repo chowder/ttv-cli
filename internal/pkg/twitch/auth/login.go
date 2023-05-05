@@ -1,157 +1,124 @@
 package auth
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/term"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"syscall"
+	"github.com/Jeffail/gabs/v2"
+	"github.com/go-resty/resty/v2"
+	"math/rand"
+	"time"
 	"ttv-cli/internal/pkg/twitch"
 )
 
-const loginApiUrl = "https://passport.twitch.tv/login"
+const twitchAuthUrl = "https://id.twitch.tv/oauth2/device"
+const twitchTokenUrl = "https://id.twitch.tv/oauth2/token"
 
-type request struct {
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	ClientId     string `json:"client_id"`
-	UndeleteUser bool   `json:"undelete_user"`
-	RememberMe   bool   `json:"remember_me"`
-	Captcha      struct {
-		Proof string `json:"proof"`
-	} `json:"captcha,omitempty"`
-	AuthyToken string `json:"authy_token,omitempty"`
+type Verification struct {
+	UserCode        string
+	DeviceCode      string
+	Interval        float64
+	ExpiresIn       float64
+	VerificationUrl string
 }
 
-type result struct {
-	AccessToken string `json:"access_token"`
-}
+var NotYetAuthenticatedError = errors.New("not yet authentication")
 
-func GetAccessToken(username string, password string) (string, error) {
-	if len(username) == 0 {
-		fmt.Print("Twitch username: ")
-		if _, err := fmt.Scanln(&username); err != nil {
-			return "", fmt.Errorf("could not read username from terminal: %w", err)
-		}
+func GetAccessToken() (string, error) {
+	verification, err := getVerificationCode()
+	fmt.Println("Enter code:", verification.UserCode, "at", verification.VerificationUrl)
+
+	if err != nil {
+		return "", err
 	}
 
-	if len(password) == 0 {
-		fmt.Print("Twitch password: ")
-		//goland:noinspection GoRedundantConversion - This type cast is required for Windows
-		b, err := term.ReadPassword(int(syscall.Stdin))
-		fmt.Println()
+	for {
+		time.Sleep(5 * time.Second)
+		accessToken, err := checkVerified(verification)
+		if errors.Is(err, NotYetAuthenticatedError) {
+			continue
+		}
+
 		if err != nil {
-			return "", fmt.Errorf("could not read password from terminal: %w", err)
-		}
-		password = string(b)
-	}
-
-	username = strings.TrimSpace(username)
-	password = strings.TrimSpace(password)
-
-	r := request{
-		Username:     username,
-		Password:     password,
-		ClientId:     twitch.DefaultClientId,
-		UndeleteUser: false,
-		RememberMe:   true,
-	}
-
-	requestBody, err := json.Marshal(r)
-	if err != nil {
-		return "", fmt.Errorf("could not marshal request: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", loginApiUrl, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return "", fmt.Errorf("could not create HTTP request: %w", err)
-	}
-	req.Header.Add("Client-ID", twitch.DefaultClientId)
-
-	client := &http.Client{}
-	httpResp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("error performing HTTP request: %w", err)
-	}
-
-	defer httpResp.Body.Close()
-
-	body, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading HTTP response body: %w", err)
-	}
-
-	if httpResp.StatusCode == 400 {
-		type badRequestResponse struct {
-			CaptchaProof string `json:"captcha_proof"`
-			ErrorCode    int    `json:"error_code"`
+			return "", err
 		}
 
-		var resp badRequestResponse
-		if err := json.Unmarshal(body, &resp); err != nil {
-			return "", fmt.Errorf("could not unmarshall request body: %w (body: %s)", err, string(body))
-		}
-
-		// Authy 2FA required
-		if resp.ErrorCode == 3011 || resp.ErrorCode == 3012 {
-			return loginWithAuthy2FA(resp.CaptchaProof, r)
-		}
-
-		if resp.ErrorCode == 1000 {
-			return "", errors.New("captcha required for login - this is currently not supported")
-		}
-
-		return "", errors.New("Failed to login: " + string(body))
+		return accessToken, nil
 	}
-
-	var result result
-	if err := json.Unmarshal(body, &result); err != nil {
-		return "", fmt.Errorf("failed to unmarshal response body: %w (body: %s)", err, string(body))
-	}
-
-	return result.AccessToken, nil
 }
 
-func loginWithAuthy2FA(captchaProof string, r request) (string, error) {
-	r.Captcha.Proof = captchaProof
+func checkVerified(verification Verification) (string, error) {
+	client := resty.New()
+	client = prepareHeaders(client)
 
-	fmt.Print("2FA token: ")
-	if _, err := fmt.Scanln(&r.AuthyToken); err != nil {
-		return "", errors.New("could not read 2FA token from terminal")
-	}
+	resp, err := client.R().
+		SetFormData(map[string]string{
+			"client_id":   twitch.DefaultClientId,
+			"device_code": verification.DeviceCode,
+			"grant_type":  "urn:ietf:params:oauth:grant-type:device_code",
+		}).
+		Post(twitchTokenUrl)
 
-	requestBody, err := json.Marshal(r)
 	if err != nil {
-		return "", fmt.Errorf("could not marshal request body: %w", err)
+		return "", fmt.Errorf("error checking verification: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", loginApiUrl, bytes.NewBuffer(requestBody))
+	if resp.StatusCode() != 200 {
+		return "", NotYetAuthenticatedError
+	}
+
+	parsed, err := gabs.ParseJSON(resp.Body())
+	return parsed.Path("access_token").Data().(string), err
+}
+
+func getVerificationCode() (Verification, error) {
+	var verification Verification
+	client := resty.New()
+	client = prepareHeaders(client)
+
+	resp, err := client.R().
+		SetFormData(map[string]string{
+			"client_id": twitch.DefaultClientId,
+			"scopes":    "channel_read chat:read user_blocks_edit user_blocks_read user_follows_edit user_read",
+		}).
+		Post(twitchAuthUrl)
+
 	if err != nil {
-		return "", fmt.Errorf("error creating HTTP request: %w", err)
+		return verification, fmt.Errorf("error getting verification codes: %w", err)
 	}
 
-	client := &http.Client{}
-	httpResp, err := client.Do(req)
+	parsed, err := gabs.ParseJSON(resp.Body())
 	if err != nil {
-		return "", fmt.Errorf("error performing HTTP request: %w", err)
+		return verification, fmt.Errorf("error parsing verification response: %w", err)
 	}
 
-	defer httpResp.Body.Close()
+	verification.DeviceCode = parsed.Path("device_code").Data().(string)
+	verification.UserCode = parsed.Path("user_code").Data().(string)
+	verification.ExpiresIn = parsed.Path("expires_in").Data().(float64)
+	verification.Interval = parsed.Path("interval").Data().(float64)
+	verification.VerificationUrl = parsed.Path("verification_uri").Data().(string)
 
-	body, err := ioutil.ReadAll(httpResp.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading HTTP response body: %w", err)
+	return verification, nil
+}
+
+func prepareHeaders(client *resty.Client) *resty.Client {
+	return client.
+		SetHeader("authority", "id.twitch.tv").
+		SetHeader("accept", "application/json").
+		SetHeader("accept-language", "en-US,en;q=0.9").
+		SetHeader("content-type", "application/x-www-form-urlencoded").
+		SetHeader("origin", "https://android.tv.twitch.tv").
+		SetHeader("referer", "https://android.tv.twitch.tv/").
+		SetHeader("user-agent", twitch.DefaultUserAgent)
+}
+
+func CreateRandomDeviceId() string {
+	const chars = "abcdefghijklmnopqrstuvwxyz01234567890"
+	const length = 26
+
+	deviceId := make([]byte, length)
+	for i := range deviceId {
+		deviceId[i] = chars[rand.Intn(len(chars))]
 	}
 
-	var result result
-	if err := json.Unmarshal(body, &result); err != nil {
-		return "", fmt.Errorf("error unmarshalling HTTP response body: %w", err)
-	}
-
-	return result.AccessToken, nil
+	return string(deviceId)
 }

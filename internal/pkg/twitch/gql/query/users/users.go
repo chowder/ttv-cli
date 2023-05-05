@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql"
 )
 
@@ -63,10 +64,10 @@ func makeRequest(logins []string) request {
 	}
 }
 
-func GetUsers(logins []string) ([]User, error) {
+func GetUsers(config config.Config, logins []string) ([]User, error) {
 	request := makeRequest(logins)
 
-	gqlResp, err := gql.Post(request)
+	gqlResp, err := gql.Post(config, request)
 	if err != nil {
 		return nil, fmt.Errorf("GetUsers: error with GQL request: %w", err)
 	}

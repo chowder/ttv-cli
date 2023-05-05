@@ -15,14 +15,19 @@ var liveCmd = &cobra.Command{
 	Use:   "live",
 	Short: "View which of your follows are currently live",
 	Run: func(cmd *cobra.Command, args []string) {
-		c, err := config.CreateOrRead()
+		c, err := config.Load()
 		if err != nil {
-			log.Fatalf("Error reading config: %s\n", err)
+			c, err = config.Create()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			err = c.Save()
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 
-		client := config.FromToken(c.GetAuthToken())
-
-		f, err := channelfollows.Get(client)
+		f, err := channelfollows.Get(c)
 		if err != nil {
 			log.Fatalf("Error fetching followed channels: %s\n", err)
 		}
@@ -33,7 +38,7 @@ var liveCmd = &cobra.Command{
 		}
 
 		// Get all streamers from Twitch API
-		streamers, err := users.GetUsers(s)
+		streamers, err := users.GetUsers(c, s)
 		if err != nil {
 			log.Fatalf("Could not get channel information - %s\n", err)
 		}

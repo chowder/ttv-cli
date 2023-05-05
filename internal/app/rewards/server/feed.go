@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/Adeithe/go-twitch/pubsub"
 	"log"
+	"ttv-cli/internal/pkg/config"
 	"ttv-cli/internal/pkg/twitch/gql/query/channel"
 	"ttv-cli/internal/pkg/twitch/pubsub/communitypointschannel"
 )
@@ -26,9 +27,9 @@ func (r *reward) toBytes() []byte {
 }
 
 // pumpEvents pumps redemption events from Twitch to Clients
-func (h *Hub) pumpEvents(streamer string) {
+func (h *Hub) pumpEvents(config config.Config, streamer string) {
 
-	c, err := channel.GetChannel(streamer)
+	c, err := channel.GetChannel(config, streamer)
 	if err != nil {
 		log.Fatalln("pumpEvents: ", err)
 	}

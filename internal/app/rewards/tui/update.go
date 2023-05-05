@@ -99,13 +99,8 @@ func (m Model) subscribeToRewards() {
 }
 
 func (m Model) subscribeToPoints() {
-	details, err := m.config.GetTokenDetails()
-	if err != nil {
-		log.Fatalf("Could not get auth token details: %s\n", err)
-	}
-
-	userId := details.UserId
-	err = m.pubsubClient.ListenWithAuth(m.config.GetAuthToken(), communitypointsuser.Topic, userId)
+	userId := m.config.UserId
+	err := m.config.PubSubListen(m.pubsubClient, communitypointschannel.Topic, m.config.UserId)
 	if err != nil {
 		log.Fatalf("Could not subscribe to %s.%s: %s\n", communitypointsuser.Topic, m.twitchChannel.Id, err)
 	}

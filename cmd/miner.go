@@ -16,14 +16,19 @@ var minerCmd = &cobra.Command{
 }
 
 func run() {
-	c, err := config.CreateOrRead()
+	c, err := config.Load()
 	if err != nil {
-		log.Fatalln("could not read config file: ", err)
+		c, err = config.Create()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		err = c.Save()
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
-	client := config.FromToken(c.GetAuthToken())
-
-	m := miner.New(client)
+	m := miner.New(c)
 	m.Start()
 }
 

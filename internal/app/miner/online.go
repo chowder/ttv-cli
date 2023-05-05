@@ -72,7 +72,7 @@ func registerStreamStartHandlers(ctx context.Context, eventBus EventBus.Bus) err
 	return nil
 }
 
-func getStreamStartChannel(config *config.Config, ctx context.Context) (<-chan StreamDetails, error) {
+func getStreamStartChannel(config config.Config, ctx context.Context) (<-chan StreamDetails, error) {
 	follows, err := channelfollows.Get(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get followed channels: %w", err)
@@ -92,7 +92,7 @@ func getStreamStartChannel(config *config.Config, ctx context.Context) (<-chan S
 				close(c)
 				return
 			case <-time.After(30 * time.Second):
-				us, err := users.GetUsers(logins)
+				us, err := users.GetUsers(config, logins)
 				if err != nil {
 					log.Println("could not get updates: ", err)
 				}
